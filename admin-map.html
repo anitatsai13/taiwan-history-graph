@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>臺灣行政區劃演變地圖</title>
+<style>
+:root{
+  --bg:#ffffff; --panel:#f5f5f7; --card:#ffffff; --ink:#1d1d1f; --muted:#7a7a7a;
+  --line:#e3e3e6; --line2:#cfcfd4; --sea:#e9f1f8; --void:#faf6e4; --coast:#8fa3b5;
+  --blue:#0066cc; --red:#ff3b30; --green:#34c759; --orange:#ff9f0a; --purple:#af52de;
+  --f1:#f2a0c0; --f2:#8fd6a8; --f3:#f7c66b; --f4:#9ec5f0; --f5:#c9b3e8; --f6:#8fd4d8;  /* 分區底色 */
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#141416; --panel:#1e1e21; --card:#1a1a1d; --ink:#f2f2f4; --muted:#9a9aa0;
+         --line:#2e2e33; --line2:#3d3d44; --sea:#13202c; --void:#2a2718; --coast:#5b7286;
+         --blue:#4a9eff; --red:#ff6b61; --green:#4cd97b; --orange:#ffb340; --purple:#c77dff;
+         --f1:#8e4a68; --f2:#3f7a55; --f3:#8a6a2a; --f4:#3d5f86; --f5:#5b4880; --f6:#2f6b70; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.6 system-ui,-apple-system,"Microsoft JhengHei",sans-serif}
+header{padding:12px 18px 10px;border-bottom:1px solid var(--line)}
+h1{margin:0 0 10px;font-size:18px;letter-spacing:-.3px}
+h1 small{font-weight:400;color:var(--muted);font-size:12px;margin-left:8px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.grp-l{font-size:11.5px;font-weight:700;color:var(--muted);padding:0 4px;letter-spacing:.5px}
+.tab{border:1px solid var(--line2);background:var(--panel);border-radius:999px;
+  padding:5px 13px;font-size:13px;cursor:pointer;user-select:none;white-space:nowrap;
+  transition:background .15s,color .15s,border-color .15s}
+.tab .yr{font-size:11px;color:var(--muted);margin-left:6px}
+.tab.on{background:var(--k);border-color:var(--k);color:#fff}
+.tab.on .yr{color:rgba(255,255,255,.85)}
+.arrow{color:var(--red);font-size:11px;font-weight:700;padding:0 2px;white-space:nowrap}
+.play{margin-left:auto;border:1px solid var(--line2);background:var(--panel);
+  border-radius:999px;padding:5px 14px;font-size:13px;cursor:pointer}
+main{display:grid;grid-template-columns:minmax(280px,420px) 1fr;gap:18px;
+  padding:16px 18px 60px;max-width:1260px;margin:0 auto;align-items:start}
+@media (max-width:880px){ main{grid-template-columns:1fr} }
+.mapbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px;
+  position:sticky;top:12px}
+svg{display:block;width:100%;height:auto}
+.sea{fill:var(--sea)}
+.void{fill:var(--void);stroke:var(--coast);stroke-width:1.1;stroke-linejoin:round}
+.coast{fill:none;stroke:var(--coast);stroke-width:1.6;stroke-linejoin:round}
+.rg{stroke:#fff;stroke-width:.9;stroke-linejoin:round}
+@media (prefers-color-scheme:dark){ .rg{stroke:#111} }
+.rg.add{stroke:var(--red);stroke-width:1.8}
+.rlbl{font-size:8px;font-weight:700;fill:#333;paint-order:stroke;stroke:#fff;
+  stroke-width:2.2px;stroke-linejoin:round;pointer-events:none}
+@media (prefers-color-scheme:dark){ .rlbl{fill:#f2f2f4;stroke:#111} }
+.rlbl.add{fill:var(--red)}
+.seat{fill:#fff;stroke:#c00;stroke-width:1.4}
+.vlbl{font-size:8px;fill:var(--muted);font-weight:600}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.new{animation:fade .35s ease-out both}
+.side{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.card h2{margin:0 0 4px;font-size:16px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.card h2 .sub{font-size:12px;font-weight:400;color:var(--muted)}
+.div{font-size:22px;font-weight:800;letter-spacing:1px;color:var(--k);margin:6px 0 10px}
+.row{display:flex;gap:10px;margin:8px 0;align-items:flex-start}
+.row .t{flex:0 0 58px;font-size:12px;font-weight:700;color:var(--muted);padding-top:2px}
+.row .c{flex:1;font-size:13.5px}
+.tree{display:flex;flex-wrap:wrap;gap:9px;margin-top:2px}
+.fu{border:1px solid var(--line);border-radius:10px;padding:7px 9px;flex:1 1 175px}
+.fu-t{font-weight:800;font-size:13px;text-align:center;padding-bottom:5px;margin-bottom:6px;
+  border-bottom:2px solid currentColor}
+.fu-t.add::after{content:"新";font-size:9px;background:var(--red);color:#fff;
+  border-radius:4px;padding:0 3px;margin-left:4px;vertical-align:2px}
+.fu-t i{font-style:normal;font-size:10px;color:var(--muted);margin-left:4px}
+.kids{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+.kid{font-size:11.5px;border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+  background:var(--panel)}
+.kid.add{border-color:var(--red);font-weight:700;color:var(--red)}
+.note{font-size:11.5px;border-radius:5px;padding:1px 7px;white-space:nowrap;
+  background:color-mix(in srgb,var(--orange) 20%,transparent)}
+.note.ok{background:color-mix(in srgb,var(--green) 20%,transparent)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);
+  padding:10px 16px;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.legend b{color:var(--ink)}
+.sw{display:inline-block;width:13px;height:13px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+th,td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+th{background:var(--panel);font-weight:600;white-space:nowrap}
+tr.on td,tr.on th{background:color-mix(in srgb,var(--k) 12%,transparent)}
+.hl{color:var(--red);font-weight:700}
+.hb{color:var(--blue);font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <h1>臺灣行政區劃演變<small>清帝國 → 日治 → 戰後　│　點時期按鈕看分區、背景與隸屬</small></h1>
+  <div class="tabs" id="tabs"></div>
+</header>
+
+<main>
+  <div class="mapbox">
+    <svg id="map" viewBox="-32 0 246 420" aria-label="臺灣行政區劃地圖">
+      <rect class="sea" x="-32" y="0" width="246" height="420"/>
+      <path id="void" class="void"/>
+      <g id="regions"></g>
+      <path id="coast" class="coast"/>
+      <g id="marks"></g>
+    </svg>
+  </div>
+
+  <div class="side">
+    <div class="card" id="info"></div>
+    <div class="legend" id="legend"></div>
+    <div class="card">
+      <h2>八階段一覽</h2>
+      <table id="tbl"></table>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ================= 臺灣外框 ================= */
+const OUT = [[104,12],[114,18],[124,28],[134,34],[146,44],[152,56],[157,72],[160,88],
+ [164,104],[168,124],[172,146],[175,168],[176,190],[174,212],[170,234],[166,254],[160,274],
+ [154,294],[147,314],[140,334],[132,352],[124,368],[118,384],[113,398],[108,404],[103,396],
+ [100,382],[97,366],[93,350],[88,336],[82,322],[75,310],[68,298],[60,284],[54,270],[48,254],
+ [43,238],[39,222],[36,206],[34,190],[33,174],[34,158],[37,142],[41,128],[46,114],[52,100],
+ [59,86],[67,72],[76,58],[85,44],[94,28]];
+const PENGHU = "M6,238 L13,235 L16,241 L11,247 L4,245 Z M2,252 L8,251 L9,256 L3,257 Z M14,250 L19,249 L20,254 L15,255 Z";
+document.getElementById("coast").setAttribute("d","M"+OUT.map(p=>p.join(",")).join(" L")+" Z "+PENGHU);
+document.getElementById("void").setAttribute("d","M"+OUT.map(p=>p.join(",")).join(" L")+" Z "+PENGHU);
+
+/* 某個 y 的左右海岸線 x（用外框線段求交點） */
+function edgesAt(y){
+  const xs=[];
+  for(let i=0;i<OUT.length;i++){
+    const [x1,y1]=OUT[i], [x2,y2]=OUT[(i+1)%OUT.length];
+    if((y1-y)*(y2-y)<=0 && y1!==y2) xs.push(x1+(x2-x1)*(y-y1)/(y2-y1));
+  }
+  if(xs.length<2) return null;
+  return [Math.min(...xs), Math.max(...xs)];
+}
+/* 由 y1→y2、左右比例 f1→f2 圍出一塊區域 */
+function band(y1,y2,f1,f2,step=6){
+  const L=[],Rt=[];
+  for(let y=y1;y<=y2+.01;y=Math.min(y+step,y2)){
+    const e=edgesAt(y); if(!e){ if(y>=y2) break; continue; }
+    const [l,r]=e;
+    L.push([l+(r-l)*f1, y]); Rt.push([l+(r-l)*f2, y]);
+    if(y>=y2) break;
+  }
+  if(!L.length) return "";
+  return "M"+L.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" L")+
+         " L"+Rt.reverse().map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" L")+" Z";
+}
+function centroid(y1,y2,f1,f2){
+  const y=(y1+y2)/2, e=edgesAt(y);
+  if(!e) return [80,y];
+  return [e[0]+(e[1]-e[0])*(f1+f2)/2, y];
+}
+
+/* ================= 各期分區 ================= */
+/* r: [名稱, y1, y2, f1, f2, 所屬府index]　（f 0＝西岸、1＝東岸） */
+const FU_C = ["--f1","--f2","--f3","--f4","--f5","--f6"];
+const W = 0.62;   // 清帝國前期實際治理的西部範圍
+
+const STAGES = [
+{ key:"①", name:"康熙", yr:"康熙23年 1684", k:"--blue", div:"一府三縣",
+  trig:"", east:true,
+  r:[["諸羅縣",12,228,0,W,0],["臺灣縣",228,292,0,W,0],["鳳山縣",292,404,0,W,0]],
+  penghu:null, seat:["臺灣府",57,262],
+  tree:[["臺灣府",["臺灣縣","鳳山縣","諸羅縣"]]],
+  add:["臺灣府","臺灣縣","鳳山縣","諸羅縣"],
+  key1:"納入版圖後設立<b>臺灣府</b>（今臺南），下轄<b>諸羅縣、臺灣縣、鳳山縣</b>。<b>澎湖</b>此時隸屬臺灣縣。",
+  why:"將臺灣<span class='hb'>納入版圖</span>，隸屬<span class='hb'>福建省</span>。",
+  focus:"開發集中在<b>中南部平原</b>", eastTxt:"19世紀後期沈葆楨治臺前，東部未設置行政區治理" },
+
+{ key:"②", name:"雍正", yr:"雍正元年1723・5年1727", k:"--green", div:"一府四縣二廳",
+  trig:"朱一貴事件", east:true,
+  r:[["淡水廳",12,122,0,W,0],["彰化縣",122,192,0,W,0],["諸羅縣",192,252,0,W,0],
+     ["臺灣縣",252,298,0,W,0],["鳳山縣",298,404,0,W,0]],
+  penghu:"澎湖廳", seat:["臺灣府",57,272],
+  tree:[["臺灣府",["淡水廳","彰化縣","諸羅縣","臺灣縣","鳳山縣","澎湖廳"]]],
+  add:["彰化縣","淡水廳","澎湖廳"],
+  key1:"增設<b>彰化縣、淡水廳</b>（雍正元年1723）、<b>澎湖廳</b>（雍正5年1727）",
+  why:"因康熙末年爆發<span class='hl'>朱一貴事件</span>，為加強統治而增設。",
+  focus:"開發往<b>北部</b>發展" },
+
+{ key:"③", name:"乾隆", yr:"乾隆52年 1787", k:"--green", div:"一府四縣二廳",
+  trig:"林爽文事件", east:true,
+  r:[["淡水廳",12,122,0,W,0],["彰化縣",122,192,0,W,0],["嘉義縣",192,252,0,W,0],
+     ["臺灣縣",252,298,0,W,0],["鳳山縣",298,404,0,W,0]],
+  penghu:"澎湖廳", seat:["臺灣府",57,272],
+  tree:[["臺灣府",["淡水廳","彰化縣","嘉義縣","臺灣縣","鳳山縣","澎湖廳"]]],
+  add:["嘉義縣"],
+  key1:"<b>諸羅縣改名為嘉義縣</b>（區劃數量不變，只有改名）",
+  why:"乾隆嘉勉協助平定<span class='hl'>林爽文事件</span>的<span class='hl'>義行</span>（義民）——諸羅縣民守城有功，賜名「嘉義」。",
+  focus:"開發往<b>北部</b>發展" },
+
+{ key:"④", name:"嘉慶", yr:"嘉慶17年 1812", k:"--orange", div:"一府四縣三廳",
+  trig:"吳沙開拓蛤仔難", east:true,
+  r:[["淡水廳",12,122,0,W,0],["噶瑪蘭廳",58,120,W,1,0],["彰化縣",122,192,0,W,0],
+     ["嘉義縣",192,252,0,W,0],["臺灣縣",252,298,0,W,0],["鳳山縣",298,404,0,W,0]],
+  penghu:"澎湖廳", seat:["臺灣府",57,272],
+  tree:[["臺灣府",["噶瑪蘭廳","淡水廳","彰化縣","嘉義縣","臺灣縣","鳳山縣","澎湖廳"]]],
+  add:["噶瑪蘭廳"],
+  key1:"1812 年增設<b>噶瑪蘭廳</b>（清帝國前期最晚設立的行政區）",
+  why:"①<span class='hl'>漢人移墾</span>引發<span class='hb'>漢原衝突</span> ②<span class='hl'>海盜</span>侵擾蛤仔難（今宜蘭）——<span class='hb'>吳沙</span>開拓蛤仔難。",
+  focus:"拓墾範圍擴及<b>東北部</b>（宜蘭）" },
+
+{ key:"⑤", name:"沈葆楨", yr:"光緒元年 1875", k:"--red", div:"二府八縣四廳",
+  trig:"牡丹社事件", east:false,
+  r:[["基隆廳",12,44,.45,1,0],["淡水縣",12,80,0,.45,0],["宜蘭縣",58,124,.62,1,0],
+     ["新竹縣",80,132,0,.62,0],
+     ["彰化縣",132,196,0,.55,1],["埔里社廳",150,238,.55,.78,1],
+     ["嘉義縣",196,256,0,.55,1],["臺灣縣",256,300,0,.55,1],
+     ["卑南廳",124,360,.78,1,1],["鳳山縣",300,358,0,.62,1],["恆春縣",358,404,0,1,1]],
+  penghu:"澎湖廳", seat:["臺北府",99,50],
+  tree:[["臺北府",["淡水縣","新竹縣","宜蘭縣","基隆廳"]],
+        ["臺灣府",["臺灣縣","彰化縣","嘉義縣","鳳山縣","恆春縣","埔里社廳","卑南廳","澎湖廳"]]],
+  add:["臺北府","淡水縣","新竹縣","宜蘭縣","基隆廳","恆春縣","卑南廳","埔里社廳"],
+  key1:"增設<b>臺北府</b>（淡水縣、新竹縣、宜蘭縣、基隆廳）、<b>恆春縣</b>、<b>卑南廳</b>、<b>埔里社廳</b>；淡水廳裁撤為淡水、新竹二縣，噶瑪蘭廳改宜蘭縣。",
+  why:"<span class='hl'>牡丹社事件</span>後加強防務、<b>開山撫番</b>經營後山。",
+  focus:"政經重心<b>北移</b>（增臺北府）" },
+
+{ key:"⑥", name:"劉銘傳", yr:"光緒13年 1887", k:"--purple", div:"三府一州十一縣三廳",
+  trig:"清法戰爭・臺灣建省", east:false,
+  r:[["基隆廳",12,44,.45,1,0],["淡水縣",12,80,0,.45,0],["宜蘭縣",58,124,.62,1,0],
+     ["新竹縣",80,128,0,.62,0],
+     ["苗栗縣",128,160,0,.6,1],["臺灣縣（中）",160,196,0,.6,1],["埔里社廳",150,238,.6,.8,1],
+     ["彰化縣",196,220,0,.55,1],["雲林縣",220,252,0,.55,1],
+     ["嘉義縣",252,286,0,.55,2],["安平縣",286,314,0,.55,2],["鳳山縣",314,362,0,.62,2],
+     ["恆春縣",362,404,0,1,2],["臺東直隸州",124,362,.8,1,3]],
+  penghu:"澎湖廳", seat:["臺灣府（中）",60,176],
+  tree:[["臺北府",["淡水縣","新竹縣","宜蘭縣","基隆廳"]],
+        ["臺灣府（中）",["臺灣縣（中）","彰化縣","雲林縣","苗栗縣","埔里社廳"]],
+        ["臺南府",["安平縣","嘉義縣","鳳山縣","恆春縣","澎湖廳"]],
+        ["臺東直隸州",[]]],
+  add:["臺灣府（中）","臺灣縣（中）","雲林縣","苗栗縣","臺南府","安平縣","臺東直隸州"],
+  key1:"中部增設<b>臺灣府</b>（省城；新設臺灣縣、雲林縣、苗栗縣），原臺灣府改稱<b>臺南府</b>、原臺灣縣改稱<b>安平縣</b>；<b>卑南廳升格為臺東直隸州</b>。",
+  why:"<span class='hl'>清法戰爭</span>後、光緒11年（1885）<span class='hl'>臺灣建省</span>。",
+  focus:"省城設在<b>中部</b>，行政重心北移完成" }
+,
+{ key:"⑦", name:"日治", yr:"大正9年 1920 州制", k:"--red", div:"五州三廳", era:"日治",
+  trig:"乙未割臺", east:false,
+  r:[["臺北州",12,102,.45,1,0],["新竹州",12,152,0,.45,1],["新竹州",102,152,.45,.78,1],
+     ["臺中州",152,232,0,.78,2],["花蓮港廳",102,248,.78,1,3],
+     ["臺南州",232,302,0,.62,4],["臺東廳",248,372,.72,1,3],
+     ["高雄州",302,404,0,.72,5]],
+  penghu:"澎湖廳", seat:["臺北州廳",99,50],
+  fuNames:["臺北州","新竹州","臺中州","東部與離島三廳","臺南州","高雄州"],
+  tree:[["五州（西部）",["臺北州","新竹州","臺中州","臺南州","高雄州"]],
+        ["三廳（東部與離島）",["花蓮港廳","臺東廳","澎湖廳"]]],
+  add:["臺北州","新竹州","臺中州","臺南州","高雄州","花蓮港廳","臺東廳","澎湖廳"],
+  key1:"1920 年改行<b>州制</b>：西部五州（臺北、新竹、臺中、臺南、高雄）＋東部與離島三廳（<b>花蓮港廳、臺東廳、澎湖廳</b>）。州下設郡、街、庄。",
+  why:"1895 <span class='hl'>乙未割臺</span>後日本統治；1920 年地方制度改正，確立<b>五州三廳</b>格局，是今日縣市的雛形。",
+  focus:"西部五州＝今日<b>六都與各縣</b>的前身；東部仍以「廳」為名" },
+
+{ key:"⑧", name:"戰後", yr:"2014/12/25 起", k:"--blue", div:"六直轄市・十六縣市", era:"戰後",
+  trig:"二次大戰",  east:false,
+  r:[["基隆市",12,32,.6,1,0],["新北市",12,74,.24,1,0],["臺北市",30,54,.46,.72,0],
+     ["宜蘭縣",56,120,.72,1,1],["桃園市",52,92,0,.46,0],
+     ["新竹市",92,110,0,.24,1],["新竹縣",92,128,.24,.62,1],["苗栗縣",128,158,0,.62,1],
+     ["臺中市",158,200,0,.7,2],["南投縣",186,244,.46,.78,2],
+     ["彰化縣",200,222,0,.46,2],["雲林縣",222,252,0,.46,2],
+     ["花蓮縣",120,250,.78,1,3],["臺東縣",250,362,.62,1,3],
+     ["嘉義市",252,268,0,.2,4],["嘉義縣",252,288,.2,.6,4],
+     ["臺南市",288,318,0,.55,4],["高雄市",318,368,0,.6,5],["屏東縣",344,404,0,1,5]],
+  penghu:"澎湖縣", seat:["臺北市",100,42],
+  fuNames:["北部","桃竹苗","中部","東部","雲嘉南","高屏"],
+  tree:[["六直轄市",["臺北市","新北市","桃園市","臺中市","臺南市","高雄市"]],
+        ["市（3）",["基隆市","新竹市","嘉義市"]],
+        ["縣（13）",["新竹縣","苗栗縣","彰化縣","南投縣","雲林縣","嘉義縣","屏東縣","宜蘭縣","花蓮縣","臺東縣","澎湖縣","金門縣","連江縣"]]],
+  add:["桃園市"],
+  key1:"<b>六直轄市</b>＝臺北、新北、桃園、臺中、臺南、高雄；另有基隆、新竹、嘉義三市與十三縣。2014/12/25 <b>桃園縣升格為桃園市</b>，成為第六都。",
+  why:"<span class='hl'>二次大戰</span>後由中華民國接收，歷經多次調整；2010 年起陸續改制直轄市。",
+  focus:"人口與資源集中<b>西部走廊</b>；金門縣、連江縣屬<b>福建省</b>（地圖外）" }
+];
+const MEANING = "多因<b>內外動亂</b>（民變與外力入侵），為加強<b>治安</b>與<b>國防</b>而增設行政區劃。";
+const MEANING2 = "日治確立<b>五州三廳</b>格局，戰後沿用並調整為今日的<b>六都與縣市</b>——今天的行政區可以一路追溯回這裡。";
+const MEAN_OF = s => s.era ? MEANING2 : MEANING;
+STAGES.forEach(s=>{
+  s.fuIdx={};
+  s.tree.forEach(([fu,kids],i)=>{ s.fuIdx[fu]=i; kids.forEach(k=>s.fuIdx[k]=i); });
+  /* 地圖上有畫的區塊，顏色以地圖的分區索引為準 */
+  s.mapIdx={};
+  s.r.forEach(([n,,,,,fu])=>{ s.mapIdx[n]=fu; });
+  if(s.penghu && s.mapIdx[s.penghu]===undefined) s.mapIdx[s.penghu]=s.fuIdx[s.penghu]||0;
+});
+/* 取某個名稱該用的顏色索引：先看地圖，再看隸屬表 */
+const cIdx = (s,n) => s.mapIdx[n] !== undefined ? s.mapIdx[n]
+              : (s.fuIdx[n] !== undefined ? s.fuIdx[n] : 0);
+
+let cur=0, timer=null;
+
+/* ================= 工具列（開港前／後分組＋觸發事件箭頭） ================= */
+const tabs=document.getElementById("tabs");
+const GROUP={0:"清・開港通商前",4:"清・開港通商後",6:"日治",7:"戰後"};
+function buildTabs(){
+  STAGES.forEach((s,i)=>{
+    if(GROUP[i]){ const g=document.createElement("span"); g.className="grp-l";
+      g.textContent=(i?"｜":"")+GROUP[i]; tabs.appendChild(g); }
+    else if(s.trig){ const a=document.createElement("span"); a.className="arrow";
+      a.textContent="→"+s.trig+"→"; tabs.appendChild(a); }
+    const b=document.createElement("div");
+    b.className="tab"; b.style.setProperty("--k","var("+s.k+")");
+    b.innerHTML=s.key+" "+s.name+'<span class="yr">'+s.yr+"</span>";
+    b.onclick=()=>{ stop(); show(i); };
+    tabs.appendChild(b);
+    if(GROUP[i] && STAGES[i+1] && !GROUP[i+1] && STAGES[i+1].trig){
+      const a=document.createElement("span"); a.className="arrow";
+      a.textContent="→"+STAGES[i+1].trig+"→"; tabs.appendChild(a);
+    }
+  });
+  const p=document.createElement("div"); p.className="play"; p.textContent="▶ 自動播放";
+  p.onclick=()=>{ timer?stop():start(); }; tabs.appendChild(p); return p;
+}
+const playBtn=buildTabs();
+function start(){ playBtn.textContent="⏸ 停止"; timer=setInterval(()=>show((cur+1)%STAGES.length),2400); }
+function stop(){ if(timer){clearInterval(timer);timer=null;} playBtn.textContent="▶ 自動播放"; }
+
+/* ================= 畫分區 ================= */
+const NS="http://www.w3.org/2000/svg";
+function drawMap(s){
+  const g=document.getElementById("regions"), mk=document.getElementById("marks");
+  g.innerHTML=""; mk.innerHTML="";
+  const labelled=new Set();
+  s.r.forEach(([n,y1,y2,f1,f2,fu])=>{
+    const isNew=s.add.includes(n);
+    const p=document.createElementNS(NS,"path");
+    p.setAttribute("d",band(y1,y2,f1,f2));
+    p.setAttribute("class","rg"+(isNew?" add new":""));
+    p.setAttribute("fill","var("+FU_C[fu]+")");
+    p.setAttribute("opacity", n.includes("廳")||n.includes("州") ? .72 : .95);
+    const ttl=document.createElementNS(NS,"title"); ttl.textContent=n; p.appendChild(ttl);
+    g.appendChild(p);
+    if(labelled.has(n)) return;      // 同一區分成多段時只標一次
+    labelled.add(n);
+    const [cx,cy]=centroid(y1,y2,f1,f2);
+    const t=document.createElementNS(NS,"text");
+    t.setAttribute("x",cx); t.setAttribute("y",cy+2.5);
+    t.setAttribute("text-anchor","middle");
+    t.setAttribute("class","rlbl"+(isNew?" add":""));
+    t.textContent=n.replace("（中）","");
+    mk.appendChild(t);
+  });
+  /* 澎湖 */
+  if(s.penghu){
+    const isNew=s.add.includes(s.penghu);
+    const p=document.createElementNS(NS,"path");
+    p.setAttribute("d",PENGHU); p.setAttribute("class","rg"+(isNew?" add new":""));
+    p.setAttribute("fill","var("+FU_C[cIdx(s,s.penghu)]+")"); p.setAttribute("opacity",.72);
+    g.appendChild(p);
+  }
+  const pl=document.createElementNS(NS,"text");
+  pl.setAttribute("x",11); pl.setAttribute("y",268); pl.setAttribute("text-anchor","middle");
+  pl.setAttribute("class","rlbl"+(s.penghu&&s.add.includes(s.penghu)?" add":""));
+  pl.textContent = s.penghu || "澎湖（臺灣縣）";
+  mk.appendChild(pl);
+  /* 府治標記 */
+  const [sn,sx,sy]=s.seat;
+  const sq=document.createElementNS(NS,"rect");
+  sq.setAttribute("x",sx-3); sq.setAttribute("y",sy-3);
+  sq.setAttribute("width",6); sq.setAttribute("height",6); sq.setAttribute("class","seat");
+  mk.appendChild(sq);
+  const st2=document.createElementNS(NS,"text");
+  st2.setAttribute("x",sx-6); st2.setAttribute("y",sy+2.5);
+  st2.setAttribute("text-anchor","end"); st2.setAttribute("class","rlbl");
+  st2.setAttribute("fill","#c00"); st2.textContent=sn.replace("（中）","");
+  mk.appendChild(st2);
+  if(s.era==="戰後"){
+    const t2=document.createElementNS(NS,"text");
+    t2.setAttribute("x",-14); t2.setAttribute("y",120); t2.setAttribute("class","vlbl");
+    t2.textContent="金門縣・連江縣"; mk.appendChild(t2);
+    const t3=document.createElementNS(NS,"text");
+    t3.setAttribute("x",-14); t3.setAttribute("y",131); t3.setAttribute("class","vlbl");
+    t3.textContent="（福建省，圖外）"; mk.appendChild(t3);
+  }
+  /* 未設官治理的說明 */
+  if(s.east){
+    const v=document.createElementNS(NS,"text");
+    v.setAttribute("x",150); v.setAttribute("y",250); v.setAttribute("text-anchor","middle");
+    v.setAttribute("class","vlbl"); v.textContent="東部未設行政區";
+    mk.appendChild(v);
+  }
+}
+
+/* ================= 說明卡 ================= */
+function treeHtml(s){
+  return '<div class="tree">'+ s.tree.map(([fu,kids],i)=>{
+    const c=FU_C[cIdx(s,fu)];
+    return '<div class="fu" style="color:var('+c+');border-color:var('+c+')">'+
+    '<div class="fu-t'+(s.add.includes(fu)?" add":"")+'">'+fu.replace("（中）","")+
+      (fu==="臺灣府（中）"?"<i>省城</i>":"")+'</div>'+
+    (kids.length?'<div class="kids">'+kids.map(k=>
+      '<span class="kid'+(s.add.includes(k)?" add":"")+'" style="color:var(--ink)">'+
+      k.replace("（中）","")+'</span>').join("")+'</div>'
+     :'<div class="kids"><span class="kid" style="color:var(--muted)">直隸於臺灣省</span></div>')+
+    '</div>'; }).join("")+'</div>';
+}
+function drawInfo(s){
+  const el=document.getElementById("info");
+  el.style.setProperty("--k","var("+s.k+")");
+  el.innerHTML=
+    '<h2>'+s.key+' '+s.name+'年間<span class="sub">'+s.yr+
+      (s.trig?'　│　觸發：<b style="color:var(--red)">'+s.trig+'</b>':'')+'</span></h2>'+
+    '<div class="div">'+s.div+'</div>'+
+    '<div class="row"><div class="t">背景</div><div class="c">'+s.why+'</div></div>'+
+    '<div class="row"><div class="t">重點</div><div class="c">'+s.key1+'</div></div>'+
+    '<div class="row"><div class="t">隸屬</div><div class="c">'+treeHtml(s)+'</div></div>'+
+    '<div class="row"><div class="t">開發重心</div><div class="c">'+s.focus+'　'+
+      (s.east?'<span class="note">'+(s.eastTxt||"東部未設置行政區治理")+'</span>'
+             :'<span class="note ok">開山撫番後，花東已設官治理</span>')+'</div></div>'+
+    '<div class="row"><div class="t">意義</div><div class="c" style="color:var(--muted)">'+MEAN_OF(s)+'</div></div>';
+  /* 圖例：本期的府 */
+  const zones = s.fuNames || s.tree.map(([fu])=>fu);
+  document.getElementById("legend").innerHTML =
+    zones.map((z,i)=>'<span><i class="sw" style="background:var('+FU_C[i]+')"></i><b>'+
+      z.replace("（中）","（中部）")+'</b></span>').join("")+
+    '<span><i class="sw" style="background:var(--void);border:1px solid var(--coast)"></i>未設官治理</span>'+
+    '<span><i class="sw" style="background:#fff;border:1.5px solid #c00"></i>府治所在</span>'+
+    '<span><i class="sw" style="background:transparent;border:2px solid var(--red)"></i>本期新增／改名</span>';
+}
+
+/* ================= 對照表 ================= */
+function drawTable(){
+  const t=document.getElementById("tbl");
+  t.innerHTML="<tr><th>時期</th><th>區劃</th><th>背景</th><th>重點</th></tr>"+
+    STAGES.map((s,i)=>'<tr data-i="'+i+'" style="--k:var('+s.k+')"><th>'+s.key+' '+s.name+
+      '<br><span style="font-weight:400;color:var(--muted);font-size:11px">'+s.yr+'</span></th>'+
+      '<td><b>'+s.div+'</b></td><td>'+s.why+'</td><td>'+s.key1+'</td></tr>').join("")+
+    '<tr><th>意義（清代）</th><td colspan="3">'+MEANING+'</td></tr>'+
+    '<tr><th>意義（日治・戰後）</th><td colspan="3">'+MEANING2+'</td></tr>';
+  [...t.querySelectorAll("tr[data-i]")].forEach(tr=>{
+    tr.style.cursor="pointer";
+    tr.onclick=()=>{ stop(); show(+tr.dataset.i); };
+  });
+}
+
+function show(i){
+  cur=i; const s=STAGES[i];
+  [...tabs.querySelectorAll(".tab")].forEach((b,j)=>b.classList.toggle("on",j===i));
+  [...document.querySelectorAll("#tbl tr[data-i]")].forEach((tr,j)=>tr.classList.toggle("on",j===i));
+  drawMap(s); drawInfo(s);
+}
+drawTable();
+show(0);
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# 把 Downloads 的工作檔同步到這個部署 repo。
+﻿# 把 Downloads 的工作檔同步到這個部署 repo。
 # 用法：.\sync.ps1  （在 repo 目錄下執行）
 
 $ErrorActionPreference = "Stop"

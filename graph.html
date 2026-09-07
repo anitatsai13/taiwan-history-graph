@@ -52,6 +52,15 @@ h1 small{font-size:13px; font-weight:400; color:var(--muted); margin-left:10px; 
 .chip .dot{width:9px;height:9px;border-radius:50%}
 .chip.off{opacity:.35}
 .chip.ch{font-weight:600; border-width:1.5px}
+.chip.vol{
+  font-weight:700; letter-spacing:.2px; padding:5px 13px;
+  border:1.5px solid var(--ink); background:transparent; color:var(--ink);
+  flex-direction:column; align-items:flex-start; gap:0; line-height:1.25;
+}
+.chip.vol small{font-size:10px; font-weight:500; color:var(--muted); letter-spacing:0}
+.chip.vol.solo{background:var(--ink); color:var(--card)}
+.chip.vol.solo small{color:var(--card); opacity:.72}
+.vsep{width:1px; height:26px; background:var(--hairline); margin:0 3px}
 .sep{width:1px; height:20px; background:var(--hairline)}
 .legend{display:flex; gap:12px; margin-left:auto; font-size:12px; color:var(--muted); flex-wrap:wrap}
 .legend span{display:flex;align-items:center;gap:5px;white-space:nowrap}
@@ -233,7 +242,7 @@ canvas#graph.dragging{cursor:grabbing}
 <body>
 
 <header>
-  <h1>臺灣史記憶關係圖<small>史前・大航海・清帝國・日治・中華民國　│　列＝政權／年號／年代／事件／人物／地點／重點／主題　│　<b>➜ 箭頭＝因果／前後關係</b>　│　<span style="opacity:.6">v10・五章全・年代／事件／人物／地點／重點／主題　│　右鍵可改衛星</span></small></h1>
+  <h1>臺灣史記憶關係圖<small>第一冊 史前・大航海・清帝國　│　第二冊 日治・中華民國　│　列＝政權／年號／年代／事件／人物／地點／重點／主題　│　<b>➜ 箭頭＝因果／前後關係</b>　│　<span style="opacity:.6">v11・分兩冊・五章全　│　右鍵可改衛星</span></small></h1>
   <div class="chips" id="chChips"></div>
   <div class="sep"></div>
   <div class="chips" id="chips"></div>
@@ -3176,21 +3185,54 @@ const ovl=document.getElementById("ovl");
 ovl.onclick=()=>ovl.classList.remove("show");
 addEventListener("keydown",e=>{ if(e.key==="Escape") ovl.classList.remove("show"); });
 
-/* 章節開關 */
+/* 章節開關：依課本分冊分組（第一冊＝①②③、第二冊＝④⑤）
+   冊籤＝一鍵只看該冊，已經只看該冊時再按一次＝全部展開；章籤＝單章開關 */
+const VOLS = [
+  {name:"第一冊", range:"史前～清帝國",   chs:[1,2,3]},
+  {name:"第二冊", range:"日治～中華民國", chs:[4,5]}
+];
 const chBox=document.getElementById("chChips");
-Object.entries(CHAPTERS).forEach(([c,name])=>{
+const chBtn={}, volBtn={};
+function syncChips(){
+  Object.entries(chBtn).forEach(([c,b])=>b.classList.toggle("off",!chOn[c]));
+  VOLS.forEach(v=>{
+    const allMine  = v.chs.every(c=>chOn[c]);
+    const noOthers = Object.keys(CHAPTERS).every(c=> v.chs.includes(+c) || !chOn[c]);
+    volBtn[v.name].classList.toggle("solo", allMine && noOthers);
+  });
+}
+function applyCh(){
+  if(selN && !chVis(selN)) select(null);
+  syncChips();
+  layout();
+  autoFit=true;
+}
+function mkChChip(c){
   const b=document.createElement("div");
   b.className="chip ch";
-  b.textContent = ("①②③④⑤⑥⑦⑧⑨"[c-1] || c) + " " + name;
-  b.onclick=()=>{
-    chOn[c]=!chOn[c];
-    b.classList.toggle("off",!chOn[c]);
-    if(selN && !chVis(selN)) select(null);
-    layout();
-    autoFit=true;
-  };
+  b.textContent = ("①②③④⑤⑥⑦⑧⑨"[c-1] || c) + " " + CHAPTERS[c];
+  b.onclick=()=>{ chOn[c]=!chOn[c]; applyCh(); };
+  chBtn[c]=b;
   chBox.appendChild(b);
+}
+VOLS.forEach((v,vi)=>{
+  if(vi) chBox.appendChild(Object.assign(document.createElement("div"),{className:"vsep"}));
+  const vb=document.createElement("div");
+  vb.className="chip vol";
+  vb.innerHTML = v.name + "<small>" + v.range + "</small>";
+  vb.title = "只看 " + v.name + "（再按一次全部展開）";
+  vb.onclick=()=>{
+    const solo = vb.classList.contains("solo");
+    Object.keys(CHAPTERS).forEach(c=>{ chOn[c] = solo ? true : v.chs.includes(+c); });
+    applyCh();
+  };
+  volBtn[v.name]=vb;
+  chBox.appendChild(vb);
+  v.chs.filter(c=>CHAPTERS[c]).forEach(mkChChip);
 });
+/* 沒被分到冊的章（日後加章時）照樣出籤，不會憑空消失 */
+Object.keys(CHAPTERS).filter(c=>!VOLS.some(v=>v.chs.includes(+c))).forEach(mkChChip);
+syncChips();
 
 /* 種類篩選 chips */
 const chipBox=document.getElementById("chips");

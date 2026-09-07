@@ -33,6 +33,12 @@ a.card p{margin:0; font-size:13.5px; color:var(--muted); line-height:1.65}
 .tag{font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px;
   border:1px solid currentColor; letter-spacing:.3px}
 .t-main{color:var(--red)} .t-map{color:var(--green)} .t-old{color:var(--muted)}
+.vols{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 22px}
+@media (max-width:560px){ .vols{grid-template-columns:1fr} }
+.vol{background:var(--panel); border:1px solid var(--hairline); border-radius:13px; padding:13px 15px}
+.vol b{font-size:15px; letter-spacing:.2px}
+.vol span{font-size:12px; color:var(--muted); margin-left:8px}
+.vol em{display:block; font-style:normal; font-size:12.5px; color:var(--muted); margin-top:6px; line-height:1.6}
 h3{font-size:13px; color:var(--muted); font-weight:600; letter-spacing:.6px;
   margin:34px 0 12px; padding-top:22px; border-top:1px solid var(--hairline)}
 ul.docs{list-style:none; padding:0; margin:0}
@@ -45,12 +51,24 @@ footer{margin-top:40px; font-size:12px; color:var(--muted); line-height:1.8}
 <div class="wrap">
 
 <h1>臺灣史複習工具</h1>
-<p class="sub">史前・大航海・清帝國・日治・中華民國｜依課本重點整理，個人學習用</p>
+<p class="sub">依課本重點整理，個人學習用</p>
+
+<div class="vols">
+  <div class="vol">
+    <b>第一冊</b><span>史前～清帝國</span>
+    <em>① 史前與原住民　② 大航海時期　③ 清帝國時期</em>
+  </div>
+  <div class="vol">
+    <b>第二冊</b><span>日治～中華民國</span>
+    <em>④ 日治時期　⑤ 中華民國時期</em>
+  </div>
+</div>
 
 <a class="card" href="graph.html">
   <h2>記憶關係圖 <span class="tag t-main">主要</span></h2>
-  <p>五章全。列＝政權／年號／年代／事件／人物／地點／重點／主題，箭頭＝因果關係，
-     內建 53 張比較表。開 ★重點字 可看每顆節點往下展開的衛星重點；<b>右鍵可以自己改衛星</b>。</p>
+  <p>兩冊五章全。標頭的<b>冊籤</b>一按就只看該冊，再按一次全部展開；章籤仍可單章開關。
+     列＝政權／年號／年代／事件／人物／地點／重點／主題，箭頭＝因果關係，內建 53 張比較表。
+     開 ★重點字 可看每顆節點往下展開的衛星重點；<b>右鍵可以自己改衛星</b>。</p>
 </a>
 
 <a class="card" href="admin-map.html">

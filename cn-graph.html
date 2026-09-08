@@ -1,0 +1,2726 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中國與東亞史記憶關係圖</title>
+<style>
+:root{
+  --canvas:#ffffff; --panel:#f5f5f7; --card:#ffffff;
+  --ink:#1d1d1f; --muted:#7a7a7a; --hairline:#e0e0e0;
+  --theme:#af52de; --pt:#8e8e93;
+  --blue:#0066cc; --red:#ff3b30; --green:#34c759; --orange:#ff9f0a;
+  --edge:#c9c9ce; --edge-hl:#1d1d1f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --canvas:#161617; --panel:#1d1d1f; --card:#242426;
+    --ink:#f5f5f7; --muted:#98989d; --hairline:#3a3a3c;
+    --theme:#bf5af2; --pt:#98989d;
+    --blue:#2997ff; --red:#ff453a; --green:#30d158; --orange:#ffd60a;
+    --edge:#48484a; --edge-hl:#f5f5f7;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"SF Pro Text",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
+  background:var(--canvas); color:var(--ink); overflow:hidden;
+}
+header{
+  position:fixed; top:0; left:0; right:0; z-index:10;
+  padding:14px 24px 12px;
+  background:color-mix(in srgb, var(--panel) 82%, transparent);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid var(--hairline);
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+}
+h1{
+  font-family:"SF Pro Display",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
+  font-size:19px; font-weight:600; letter-spacing:-0.3px; white-space:nowrap;
+}
+h1 small{font-size:13px; font-weight:400; color:var(--muted); margin-left:10px; letter-spacing:0}
+.chips{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.chip{
+  font-size:13px; padding:5px 14px; border-radius:9999px; cursor:pointer;
+  border:1px solid var(--hairline); background:var(--card); color:var(--ink);
+  display:flex; align-items:center; gap:7px; user-select:none;
+  transition:opacity .15s, transform .06s;
+}
+.chip:active{transform:scale(.95)}
+.chip .dot{width:9px;height:9px;border-radius:50%}
+.chip.off{opacity:.35}
+.chip.ch{font-weight:600; border-width:1.5px}
+.chip.vol{
+  font-weight:700; letter-spacing:.2px; padding:5px 13px;
+  border:1.5px solid var(--ink); background:transparent; color:var(--ink);
+  flex-direction:column; align-items:flex-start; gap:0; line-height:1.25;
+}
+.chip.vol small{font-size:10px; font-weight:500; color:var(--muted); letter-spacing:0}
+.chip.vol.solo{background:var(--ink); color:var(--card)}
+.chip.vol.solo small{color:var(--card); opacity:.72}
+.vsep{width:1px; height:26px; background:var(--hairline); margin:0 3px}
+.sep{width:1px; height:20px; background:var(--hairline)}
+.legend{display:flex; gap:12px; margin-left:auto; font-size:12px; color:var(--muted); flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+canvas#graph{position:fixed; inset:0; cursor:grab}
+canvas#graph.dragging{cursor:grabbing}
+#tip{
+  position:fixed; z-index:20; pointer-events:none; display:none;
+  background:var(--card); border:1px solid var(--hairline); border-radius:11px;
+  padding:8px 12px; font-size:13px; line-height:1.45; max-width:280px;
+  box-shadow:0 4px 20px rgba(0,0,0,.12);
+}
+#tip .t-sub{color:var(--muted); font-size:12px}
+#panel{
+  position:fixed; top:74px; right:16px; bottom:52px; width:330px; max-width:calc(100vw - 32px); z-index:15;
+  background:color-mix(in srgb, var(--card) 92%, transparent);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border:1px solid var(--hairline); border-radius:18px;
+  padding:20px; overflow-y:auto; display:none;
+}
+#panel.show{display:block}
+#panel .p-close{
+  position:absolute; top:12px; right:12px; width:26px; height:26px; border-radius:50%;
+  border:none; background:var(--panel); color:var(--muted); cursor:pointer; font-size:13px;
+}
+#panel .p-kind{font-size:11px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; margin-bottom:6px}
+#panel h2{font-size:18px; font-weight:600; letter-spacing:-0.3px; line-height:1.3; margin-bottom:4px}
+#panel .p-sub{font-size:13px; color:var(--muted); margin-bottom:10px}
+#panel .p-status{
+  display:inline-block; font-size:12px; font-weight:600; padding:3px 11px;
+  border-radius:9999px; margin-bottom:12px; color:#fff;
+}
+#panel .p-note{font-size:13.5px; line-height:1.6; padding-bottom:14px; border-bottom:1px solid var(--hairline); margin-bottom:12px}
+#panel .p-rel-title{font-size:12px; font-weight:600; color:var(--muted); margin-bottom:8px}
+#panel .rel{
+  display:flex; align-items:baseline; gap:8px; padding:7px 10px; border-radius:8px;
+  cursor:pointer; font-size:13px; line-height:1.4;
+}
+#panel .rel:hover{background:var(--panel)}
+#panel .rel .r-dot{width:8px;height:8px;border-radius:50%;flex:none;position:relative;top:0}
+#panel .rel .r-lab{color:var(--muted); font-size:11.5px; margin-left:auto; text-align:right; flex:none; max-width:110px}
+#tblBox{position:relative}
+#tblBtn{font-family:inherit}
+#tblMenu{
+  position:absolute; top:36px; left:0; width:360px; max-width:calc(100vw - 40px);
+  max-height:62vh; overflow-y:auto; padding:6px;
+  background:var(--card); border:1px solid var(--hairline); border-radius:12px;
+  box-shadow:0 8px 30px rgba(0,0,0,.18); display:none; z-index:30;
+}
+#tblMenu.show{display:block}
+#tblMenu .tm-g{font-size:11px; font-weight:600; color:var(--muted); padding:9px 10px 4px; letter-spacing:.5px; border-top:1px solid var(--hairline)}
+#tblMenu .tm-g:first-child{border-top:none}
+#tblMenu .tm-i{padding:6px 10px; border-radius:8px; cursor:pointer; font-size:13px; line-height:1.4}
+#tblMenu .tm-i:hover{background:var(--panel)}
+#searchBox{position:relative}
+#searchInput{
+  width:200px; font-size:13px; padding:6px 14px; border-radius:9999px;
+  border:1px solid var(--hairline); background:var(--card); color:var(--ink);
+  outline:none; font-family:inherit;
+}
+#searchInput:focus{border-color:var(--blue); width:240px}
+#searchResults{
+  position:absolute; top:36px; left:0; width:360px; max-width:calc(100vw - 40px);
+  max-height:56vh; overflow-y:auto; padding:6px;
+  background:var(--card); border:1px solid var(--hairline); border-radius:12px;
+  box-shadow:0 8px 30px rgba(0,0,0,.18); display:none; z-index:30;
+}
+#searchResults.show{display:block}
+.sr{display:flex; align-items:baseline; gap:8px; padding:7px 10px; border-radius:8px; cursor:pointer; font-size:13px; line-height:1.4}
+.sr:hover,.sr.act{background:var(--panel)}
+.sr .r-dot{width:8px;height:8px;border-radius:50%;flex:none;position:relative;top:-1px}
+.sr .sr-sub{color:var(--muted); font-size:11.5px; margin-left:auto; text-align:right; flex:none; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.sr-empty{padding:9px 10px; font-size:12px; color:var(--muted)}
+#pBasic table{width:100%; border-collapse:collapse; font-size:12.5px; line-height:1.55; margin-bottom:12px}
+#pBasic th,#pBasic td{border:1px solid var(--hairline); padding:5px 8px; text-align:left; vertical-align:top}
+#pBasic th{background:var(--panel); font-weight:600; white-space:nowrap; width:52px}
+#pBasic .nt{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px}
+#pBasic .nt li{display:flex; gap:5px}
+#pBasic .nt-n{flex:none; font-weight:600}
+#pBasic .nt-lead{margin-bottom:5px}
+#pRels table{width:100%; border-collapse:collapse; font-size:12px; line-height:1.45}
+#pRels th,#pRels td{border:1px solid var(--hairline); padding:5px 7px; text-align:left; vertical-align:top}
+#pRels th{background:var(--panel); font-weight:600; white-space:nowrap}
+#pRels tr.lnk{cursor:pointer}
+#pRels tr.lnk:hover td{background:var(--panel)}
+#pRels .nd{display:flex; align-items:center; gap:6px}
+#pRels .r-dot{width:8px;height:8px;border-radius:50%;flex:none}
+#pRels .grp2{background:var(--panel); color:var(--muted); font-weight:600; text-align:center; font-size:11px}
+#hint{
+  position:fixed; bottom:14px; right:20px; z-index:5;
+  font-size:11.5px; color:var(--muted);
+  display:flex; align-items:center; gap:14px;
+}
+#fitBtn{
+  font-size:12px; padding:5px 14px; border-radius:9999px; cursor:pointer;
+  border:1px solid var(--hairline); background:var(--card); color:var(--ink);
+}
+#fitBtn:active{transform:scale(.95)}
+#src{
+  position:fixed; bottom:12px; left:20px; z-index:5;
+  font-size:11px; color:var(--muted); letter-spacing:.5px;
+}
+.cmp{margin:0 0 12px; border-top:1px solid var(--hairline); padding-top:12px}
+.cmp .c-title{font-size:12px; font-weight:600; color:var(--muted); margin-bottom:6px; display:flex; justify-content:space-between; gap:8px}
+.cmp .c-title .c-hint{font-weight:400; opacity:.8}
+.cmp table{width:100%; border-collapse:collapse; font-size:11.5px; line-height:1.45; cursor:zoom-in}
+.cmp th,.cmp td{border:1px solid var(--hairline); padding:4px 6px; text-align:left; vertical-align:top}
+.cmp th{background:var(--panel); font-weight:600; white-space:nowrap}
+#ovl{
+  position:fixed; inset:0; z-index:40; display:none; cursor:zoom-out;
+  background:rgba(0,0,0,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  align-items:center; justify-content:center; padding:40px;
+}
+#ovl.show{display:flex}
+#ovlBox{
+  background:var(--card); border:1px solid var(--hairline); border-radius:16px;
+  padding:24px 28px; max-width:min(92vw,940px); max-height:86vh; overflow:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+#ovlBox h3{font-size:17px; letter-spacing:-0.2px; margin-bottom:14px}
+#ovlBox table{border-collapse:collapse; font-size:15px; line-height:1.65; width:100%}
+#ovlBox th,#ovlBox td{border:1px solid var(--hairline); padding:8px 12px; text-align:left; vertical-align:top}
+#ovlBox th{background:var(--panel); white-space:nowrap}
+#ovlBox .o-hint{font-size:12px; color:var(--muted); margin-top:12px}
+#ovlBox .o-chips{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 12px}
+#ovlBox .o-chip{
+  font-size:12.5px; padding:4px 13px; border-radius:9999px; cursor:pointer; user-select:none;
+  border:1px solid var(--hairline); background:var(--card); color:var(--ink);
+}
+#ovlBox .o-chip.on{background:var(--blue); border-color:var(--blue); color:#fff}
+#ovlBox .o-chip.o-grp.on{background:var(--green); border-color:var(--green); color:#fff}
+#ovlBox .o-chip.o-kw{border-style:dashed}
+#ovlBox .o-chip.o-kw.on{background:var(--red); border-color:var(--red); border-style:solid; color:#fff}
+#ovlBox .o-chip.o-clear{color:var(--muted)}
+#ovlBox td.k-hit, #ovlBox th.k-hit{background:color-mix(in srgb, var(--blue) 16%, transparent)}
+.cmp .grp, #ovlBox .grp{background:var(--theme); color:#fff; font-weight:700; text-align:center; letter-spacing:.5px}
+.cmp .hl, #ovlBox .hl{color:var(--red); font-weight:600}
+.cmp .hb, #ovlBox .hb{color:var(--blue); font-weight:600}
+
+/* ===== ✎ 衛星掛點編輯（右鍵） ===== */
+#kwMenu{position:fixed; z-index:60; display:none; min-width:196px; padding:6px;
+  background:var(--card); border:1px solid var(--hairline); border-radius:12px;
+  box-shadow:0 12px 34px rgba(0,0,0,.18); font-size:13px; user-select:none}
+#kwMenu.show{display:block}
+#kwMenu .km-t{font-size:11px; font-weight:600; color:var(--muted); padding:6px 9px 5px; letter-spacing:.4px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+#kwMenu .km-i{padding:7px 10px; border-radius:8px; cursor:pointer; white-space:nowrap}
+#kwMenu .km-i:hover{background:var(--panel)}
+#kwMenu .km-s{height:1px; background:var(--hairline); margin:5px 4px}
+#kwMenu .km-c{display:flex; gap:7px; padding:3px 10px 8px}
+#kwMenu .km-c i{width:19px; height:19px; border-radius:50%; cursor:pointer; box-shadow:0 0 0 2px var(--card), 0 0 0 2px transparent}
+#kwMenu .km-c i.on{box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--ink)}
+#kwOvl{position:fixed; inset:0; z-index:70; display:none; background:rgba(0,0,0,.35);
+  align-items:center; justify-content:center}
+#kwOvl.show{display:flex}
+#kwBox{background:var(--card); border:1px solid var(--hairline); border-radius:16px; padding:18px 20px;
+  width:min(580px,93vw); max-height:86vh; overflow:auto; box-shadow:0 24px 60px rgba(0,0,0,.32)}
+#kwBox h3{margin:0 0 3px; font-size:16px}
+#kwBox .k-sub{font-size:12px; color:var(--muted); margin-bottom:13px; line-height:1.6}
+#kwBox .k-row{display:flex; gap:6px; align-items:center; margin-bottom:7px}
+#kwBox .k-row select,#kwBox .k-row input{font:inherit; font-size:13px; padding:6px 8px; border-radius:8px;
+  border:1px solid var(--hairline); background:var(--canvas); color:var(--ink)}
+#kwBox .k-row input{flex:1; min-width:0}
+#kwBox .k-row .k-n{width:20px; text-align:right; color:var(--muted); font-size:11px}
+#kwBox .k-row button{width:30px; height:30px; border-radius:8px; border:1px solid var(--hairline);
+  background:var(--canvas); color:var(--ink); cursor:pointer; font-size:13px; line-height:1; padding:0}
+#kwBox .k-row button:hover{background:var(--panel)}
+#kwBox .k-add{margin:4px 0 15px; padding:7px 13px; border-radius:9px; border:1px dashed var(--hairline);
+  background:transparent; color:var(--ink); cursor:pointer; font:inherit; font-size:13px}
+#kwBox .k-add:hover{background:var(--panel)}
+#kwBox .k-btns{display:flex; gap:8px; align-items:center; border-top:1px solid var(--hairline); padding-top:13px}
+#kwBox .k-btns button{padding:8px 16px; border-radius:9px; border:1px solid var(--hairline);
+  background:var(--canvas); color:var(--ink); cursor:pointer; font:inherit; font-size:13px}
+#kwBox .k-btns .k-ok{background:var(--ink); color:var(--card); border-color:var(--ink); font-weight:600}
+#kwBox .k-btns .k-sp{flex:1}
+#kwBox .k-tip{font-size:11.5px; color:var(--muted); margin-top:11px; line-height:1.7}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>中國與東亞史記憶關係圖<small>第三冊 商周至隋唐・宋元明清・晚清　│　第四冊 民國・北伐抗日・當代東亞　│　列＝朝代／年代／事件／人物／地點／重點／主題　│　<b>➜ 箭頭＝因果／前後關係</b>　│　<span style="opacity:.6">cn-v1・單元 5–9　│　右鍵可改衛星</span></small></h1>
+  <div class="chips" id="chChips"></div>
+  <div class="sep"></div>
+  <div class="chips" id="chips"></div>
+  <div class="sep"></div>
+  <div id="searchBox">
+    <input id="searchInput" type="search" placeholder="🔍 搜尋（可多關鍵字，如：長濱-台東）" autocomplete="off">
+    <div id="searchResults"></div>
+  </div>
+  <div id="tblBox">
+    <div id="tblBtn" class="chip">▦ 比較表</div>
+    <div id="tblMenu"></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--blue)"></i>西周／隋唐／清</span>
+    <span><i style="background:var(--red)"></i>東周／魏晉南北朝／元／晚清</span>
+    <span><i style="background:var(--green)"></i>秦／遼宋金／北伐建設</span>
+    <span><i style="background:var(--orange)"></i>商／漢／明／民初</span>
+    <span>◆ 時間節點</span>
+    <span style="opacity:.85">─ 主要關係　╌ 對照／因果</span>
+  </div>
+</header>
+
+<canvas id="graph"></canvas>
+<div id="tip"></div>
+
+<div id="panel">
+  <button class="p-close" id="pClose">✕</button>
+  <div class="p-kind" id="pKind"></div>
+  <h2 id="pTitle"></h2>
+  <div id="pBasic"></div>
+  <div class="cmp" id="pTbl" style="display:none"></div>
+  <div class="p-rel-title">關聯一覽（直接＋同脈絡・不限層數）</div>
+  <div id="pRels"></div>
+</div>
+
+<div id="ovl"><div id="ovlBox"></div></div>
+<div id="kwMenu"></div>
+<div id="kwOvl"><div id="kwBox"></div></div>
+
+<div id="hint"><span>搜尋（Enter 逐筆跳轉）｜章節鈕可開關｜拖曳節點｜滾輪縮放｜點擊看詳情｜<b>右鍵＝編輯衛星掛點</b></span><button id="fitBtn">置中</button></div>
+<div id="src">依會考參考書「中國與東亞篇」單元 5–9 整理（第三冊全、第四冊單元 8–9）｜單元 10 待補｜個人學習用</div>
+
+<script>
+"use strict";
+/* ===== ① 資料區 ===== */
+/* ===== 中國與東亞史（第三、四冊）資料區 ===== */
+const CHAPTERS = {5:"商周至隋唐", 6:"宋元明清", 7:"晚清變局",
+                  8:"民國建立與民初", 9:"北伐抗日與國共", 10:"中共與當代東亞"};
+const KIND = {
+  time:{name:"時間節點", cssVar:"--muted", r:10},
+  theme:{name:"主題", cssVar:"--theme", r:14},
+  point:{name:"重點", cssVar:"--pt", r:9},
+  ex:{name:"實例・人物", cssVar:"--pt", r:8}
+};
+/* ---- 節點分類：年代／事件／人物／地點／重點／主題 ---- */
+const CAT = {
+  "年代":{cssVar:"--muted",  ck:"muted"},
+  "事件":{cssVar:"--red",    ck:"red"},
+  "人物":{cssVar:"--blue",   ck:"blue"},
+  "地點":{cssVar:"--green",  ck:"green"},
+  "重點":{cssVar:"--orange", ck:"orange"},
+  "主題":{cssVar:"--theme",  ck:"theme"}
+};
+const CAT_PEOPLE = ["商鞅","秦始皇","嬴政","漢武帝","張騫","曹操","北魏孝文帝","孝文帝","唐太宗","玄奘",
+  "文成公主","趙匡胤","宋太祖","宋真宗","岳飛","鐵木真","成吉思汗","忽必烈","朱熹","畢昇",
+  "朱元璋","明太祖","明成祖","鄭和","李自成","吳三桂","利瑪竇","徐光啟","雍正","康熙","乾隆",
+  "林則徐","奕訢","曾國藩","李鴻章","明治天皇","康有為","梁啟超","光緒","慈禧太后",
+  "孫中山","袁世凱","宋教仁","段祺瑞","蔣中正","張學良","溥儀","毛澤東","蔣經國"];
+const CAT_PLACES = ["燕雲十六州","三大石窟","四大汗國","五口通商口岸","各國勢力範圍",
+  "大都（今北京）","臨安（今杭州）","汴京（今開封）","應天（今南京）","景德鎮",
+  "京師大學堂","總理各國事務衙門","黃埔軍校","滿洲國"];
+const CAT_PLACE_RE = /(城|京|都|窟|寺|關|山|河|流域|半島|租界|口岸|汗國|州$|府$|廠$|校$|堂$|衙門)/;
+const CAT_EVENT_RE = /(事變|之禍|之役|之爭|戰爭|條約|和約|之盟|變法|新政|運動|革命|起事|西征|北伐|長征|入關|禁教|海禁|通商|遷都|漢化|東來|下西洋|叩關|維新|政變|清黨|屠殺|投降|會議|建立|瓦解|統一|割據|分裂|成立|覆沒|取士|之法)/;
+function catOf(n){
+  if(n.kind==="time") return "年代";
+  if(n.kind==="theme") return "主題";
+  const L=n.label;
+  if(CAT_EVENT_RE.test(L)) return "事件";
+  if(CAT_PLACES.includes(L)) return "地點";
+  if(CAT_PEOPLE.some(p=>L.includes(p))) return "人物";
+  if(CAT_PLACE_RE.test(L)) return "地點";
+  return "重點";
+}
+
+const ERA_COLOR = {shang:"--orange", zhou:"--blue", ezhou:"--red", qin:"--green", han:"--orange",
+                   wei:"--red", suitang:"--blue", song:"--green", yuan:"--red", ming:"--orange",
+                   qing:"--blue", qlate:"--red", roc1:"--orange", roc2:"--green", roc3:"--red",
+                   civil:"--red", prc1:"--blue", prc2:"--green"};
+const ERA_LABEL = {shang:"商", zhou:"西周", ezhou:"東周（春秋戰國）", qin:"秦", han:"漢",
+                   wei:"魏晉南北朝", suitang:"隋唐", song:"遼宋金", yuan:"蒙古・元", ming:"明",
+                   qing:"清（盛清）", qlate:"晚清", roc1:"民初（袁世凱・軍閥）",
+                   roc2:"北伐與十年建設", roc3:"中日戰爭",
+                   civil:"國共內戰", prc1:"中共建政～文革", prc2:"改革開放後"};
+const ERA_C = {shang:"orange", zhou:"blue", ezhou:"red", qin:"green", han:"orange",
+               wei:"red", suitang:"blue", song:"green", yuan:"red", ming:"orange",
+               qing:"blue", qlate:"red", roc1:"orange", roc2:"green", roc3:"red",
+               civil:"red", prc1:"blue", prc2:"green"};
+
+/* ---- 朝代／分期帶（西元起訖，負數＝西元前；tier 1＝朝代、2＝細分）---- */
+const REIGNS = [
+  {tier:1, ch:5, label:"商",         from:-1600, to:-1046, c:"orange"},
+  {tier:1, ch:5, label:"西周",       from:-1046, to:-770,  c:"blue"},
+  {tier:1, ch:5, label:"東周",       from:-770,  to:-221,  c:"red"},
+  {tier:2, ch:5, label:"春秋",       from:-770,  to:-476,  c:"red"},
+  {tier:2, ch:5, label:"戰國",       from:-476,  to:-221,  c:"orange"},
+  {tier:1, ch:5, label:"秦",         from:-221,  to:-206,  c:"green"},
+  {tier:1, ch:5, label:"漢",         from:-206,  to:220,   c:"orange"},
+  {tier:1, ch:5, label:"魏晉南北朝", from:220,   to:589,   c:"red"},
+  {tier:1, ch:5, label:"隋唐",       from:589,   to:907,   c:"blue"},
+  {tier:2, ch:5, label:"隋",         from:589,   to:618,   c:"green"},
+  {tier:2, ch:5, label:"唐",         from:618,   to:907,   c:"blue"},
+  {tier:1, ch:6, label:"遼宋金",     from:907,   to:1279,  c:"green"},
+  {tier:2, ch:6, label:"北宋",       from:960,   to:1127,  c:"green"},
+  {tier:2, ch:6, label:"南宋",       from:1127,  to:1279,  c:"blue"},
+  {tier:1, ch:6, label:"元",         from:1279,  to:1368,  c:"red"},
+  {tier:1, ch:6, label:"明",         from:1368,  to:1644,  c:"orange"},
+  {tier:1,       label:"清",         from:1644,  to:1912,  c:"blue"},
+  {tier:2, ch:6, label:"盛清（康雍乾）", from:1662, to:1795, c:"blue"},
+  {tier:2, ch:7, label:"晚清",       from:1840,  to:1912,  c:"red"},
+  {tier:1,       label:"中華民國",   from:1912,  to:1949,  c:"orange"},
+  {tier:2, ch:8, label:"袁世凱・軍閥", from:1912, to:1928,  c:"orange"},
+  {tier:2, ch:9, label:"十年建設",   from:1928,  to:1937,  c:"green"},
+  {tier:2, ch:9, label:"中日戰爭",   from:1937,  to:1945,  c:"red"},
+  {tier:2, ch:10, label:"國共內戰",  from:1945,  to:1949,  c:"red"},
+  {tier:1, ch:10, label:"中華人民共和國", from:1949, to:2000, c:"blue"},
+  {tier:2, ch:10, label:"毛澤東時期", from:1949,  to:1976,  c:"blue"},
+  {tier:2, ch:10, label:"改革開放",   from:1978,  to:2000,  c:"green"}
+];
+
+/* ================= 節點 ================= */
+const N = [
+/* ---------- 年代（row 0）：y 欄＝西元年，負數為西元前；朝代帶靠它定位 ---------- */
+{id:"y01",ch:5,kind:"time",era:"shang",y2:-1600,label:"前16世紀 商朝建立",sub:"黃河下游・分封鬆散",
+ note:"商人興起於黃河下游，征服其他部族建立商朝。商王是名義上的共主，透過分封承認既有勢力，但控制力有限。殷墟出土甲骨文，證實商已進入歷史時代。"},
+{id:"y02",ch:5,kind:"time",era:"zhou",y2:-1046,label:"前12世紀 西周建立",sub:"黃河中游・封建完備",
+ note:"黃河中游的周人滅商，建立西周。為鞏固新征服地，分封宗室、姻親與功臣為諸侯，並以宗法、禮樂維繫封建秩序。"},
+{id:"y03",ch:5,kind:"time",era:"ezhou",y2:-770,label:"前8世紀 王室東遷",sub:"犬戎入侵→東周開始",
+ note:"西周末年因內憂外患，犬戎入侵攻破首都鎬，周王室被迫東遷雒邑，進入東周。王室日漸衰微，諸侯勢力坐大。"},
+{id:"y04",ch:5,kind:"time",era:"ezhou",y2:-356,label:"前356 商鞅變法",sub:"秦國・厲行法治",
+ note:"戰國時代秦國任用商鞅變法：厲行法治、編列戶籍、獎勵耕織與戰鬥、按軍功授爵位與土地，為秦國統一天下奠定基礎。"},
+{id:"y05",ch:5,kind:"time",era:"qin",y2:-221,label:"前221 秦統一天下",sub:"皇帝制度・廢封建行郡縣",
+ note:"秦王嬴政兼併六國統一天下，以「皇帝」為君主稱號，自稱始皇帝。廢除封建、全面推行郡縣，郡縣長官由中央任免，確立中央集權，並統一文字、貨幣、車軌與度量衡。"},
+{id:"y06",ch:5,kind:"time",era:"han",y2:-139,label:"前139 張騫出使西域",sub:"漢武帝・聯絡西域抗匈奴",
+ note:"漢武帝派張騫出使西域，聯絡西域各國對抗匈奴。雖未達成聯盟，卻增進漢朝對西域的認識，帶動絲路的商貿活動。"},
+{id:"y07",ch:5,kind:"time",era:"han",y2:-134,label:"前134 察舉孝廉",sub:"漢武帝・以品德取才",
+ note:"漢武帝聽從儒家學者建議，令地方官定期推舉「孝子」與「廉吏」入朝為官，是為察舉；另設太學教授儒家經典，成績優秀者可任官。"},
+{id:"y08",ch:5,kind:"time",era:"han",y2:1,label:"1世紀 佛教傳入",sub:"起源印度・經西域入中國",
+ note:"佛教起源於印度，早期在西域流行，約於西漢末年、東漢初年（1 世紀前後）經西域傳入中國。"},
+{id:"y09",ch:5,kind:"time",era:"wei",y2:220,label:"220 九品官人之法",sub:"曹魏創立・重家世",
+ note:"漢末戰亂，地方難以推舉人才。曹魏改派中央官員到地方，依家世、才能、德行將士人分為九等第授官，形成「上品無寒門，下品無世族」的弊端。"},
+{id:"y10",ch:5,kind:"time",era:"wei",y2:311,label:"311 永嘉之禍",sub:"胡人攻陷洛陽→晉室南遷",
+ note:"西晉末年，胡人攻陷漢人政權首都洛陽，史稱永嘉之禍。晉室南遷長江流域開創東晉；胡人在黃河流域建立許多政權（五胡十六國）。被視為中國史上第一次人口大規模南遷。"},
+{id:"y11",ch:5,kind:"time",era:"wei",y2:493,label:"493 北魏遷都洛陽",sub:"孝文帝漢化政策",
+ note:"鮮卑族建立的北魏，孝文帝將首都由平城南遷洛陽，推行漢化：改穿漢服、說漢語、改漢姓（拓跋→元）、鼓勵胡漢通婚，加速胡漢融合。"},
+{id:"y12",ch:5,kind:"time",era:"suitang",y2:605,label:"605 始設科舉取士",sub:"隋・抑制世族",
+ note:"隋朝統一後，為抑制世族勢力，廢除九品官人之法，改行科舉考試取士。科舉使平民入仕機會增加，促進社會階層流動，一直沿用到清末。"},
+{id:"y13",ch:5,kind:"time",era:"suitang",y2:630,label:"630 唐太宗平東突厥",sub:"被尊為天可汗",
+ note:"唐太宗擊滅東突厥，被西北各族君長尊稱為「天可汗」，唐帝國成為東亞秩序的盟主，對外族採取較平等開放的態度。"},
+{id:"y14",ch:5,kind:"time",era:"suitang",y2:641,label:"641 文成公主和親吐蕃",sub:"漢藏交流",
+ note:"唐太宗時，文成公主嫁到吐蕃（今西藏），宣揚佛教並將中原農業技術帶入西藏；吐蕃亦派貴族子弟到唐留學，促成漢藏交流。"},
+{id:"y15",ch:5,kind:"time",era:"suitang",y2:751,label:"751 怛羅斯之役",sub:"造紙術西傳",
+ note:"唐軍與大食（阿拉伯帝國）交戰於中亞怛羅斯，唐軍戰敗，被俘士兵中有造紙工匠，造紙術因而西傳，影響日後西方文化發展。"},
+{id:"y16",ch:5,kind:"time",era:"suitang",y2:907,label:"907 唐亡",sub:"契丹趁勢崛起",
+ note:"唐朝滅亡後政局混亂，契丹、女真、蒙古等草原民族先後在亞洲北部興起，影響此後的東亞局勢。"},
+
+{id:"y17",ch:6,kind:"time",era:"song",y2:947,label:"947 契丹建遼",sub:"取燕雲十六州",
+ note:"契丹族於唐亡後崛起，建國號大遼，並取得長城以南的燕雲十六州，使漢人政權北方屏障盡失。女真、西夏、高麗都向遼稱臣納貢，遼成為東亞局勢的主導者。"},
+{id:"y18",ch:6,kind:"time",era:"song",y2:960,label:"960 北宋建立",sub:"趙匡胤・重文輕武",
+ note:"趙匡胤（宋太祖）建立宋朝，定都汴京（今開封），史稱北宋。採強幹弱枝、重文輕武，兵權收歸中央，導致軍力貧弱、難以應付外敵。"},
+{id:"y19",ch:6,kind:"time",era:"song",y2:1004,label:"1004 澶淵之盟",sub:"宋遼對等・歲幣",
+ note:"宋真宗時遼軍南侵，真宗親征後雙方訂立澶淵之盟：北宋每年付遼歲幣（銀、絹），雙方君主以兄弟相稱。這是中國首度與周邊國家建立對等關係，宋遼維持百餘年和平。"},
+{id:"y20",ch:6,kind:"time",era:"song",y2:1127,label:"1127 靖康之禍",sub:"金滅北宋→南宋偏安",
+ note:"北宋聯金滅遼後，金轉而南下攻陷汴京、俘虜徽欽二帝，史稱靖康之禍，北宋滅亡。宋室南遷定都臨安（今杭州），是為南宋，與金長期南北對峙。"},
+{id:"y21",ch:6,kind:"time",era:"yuan",y2:1206,label:"1206 蒙古國建立",sub:"鐵木真・成吉思汗",
+ note:"南宋中期，鐵木真統一蒙古各部建立蒙古國，被尊稱為「成吉思汗」（偉大的統治者）。"},
+{id:"y22",ch:6,kind:"time",era:"yuan",y2:1219,label:"1219 蒙古首次西征",sub:"三次西征・四大汗國",
+ note:"鐵木真與後繼者發動三次西征，建立欽察、窩闊臺、察合臺、伊兒四大汗國，帝國疆域橫跨歐亞，促進歐亞經濟與文化交流；期間滅西夏，並與南宋合作滅金。"},
+{id:"y23",ch:6,kind:"time",era:"yuan",y2:1279,label:"1279 元滅南宋",sub:"忽必烈・首個統一中國的草原民族",
+ note:"成吉思汗之孫忽必烈建立元朝、定都大都（今北京），是為元世祖；南下滅南宋完成統一，蒙古人成為第一個統治整個中國的草原民族。"},
+{id:"y24",ch:6,kind:"time",era:"ming",y2:1368,label:"1368 明朝建立",sub:"朱元璋・定都應天",
+ note:"元末群雄並起，朱元璋擊敗群雄，定都應天（今南京），國號大明，並北上驅逐蒙古人。是第一個崛起於江南而統一中國的政權。"},
+{id:"y25",ch:6,kind:"time",era:"ming",y2:1405,label:"1405 鄭和首次下西洋",sub:"明成祖・朝貢體制顛峰",
+ note:"15 世紀前期明成祖派鄭和率船隊出使西洋，範圍達東南亞、印度洋，最遠抵非洲東岸，共七次（1405–1433）。各國以進貢名義來華貿易，朝貢體制攀上顛峰，並奠定華僑在東南亞的政經基礎。"},
+{id:"y26",ch:6,kind:"time",era:"ming",y2:1582,label:"1582 利瑪竇來華",sub:"耶穌會・西學東漸",
+ note:"天主教耶穌會傳教士利瑪竇來華，允許中國教徒祭祖祀孔以利傳教，並向士大夫介紹西學。與徐光啟合譯《幾何原本》，並繪製具完整經緯的世界地圖。"},
+{id:"y27",ch:6,kind:"time",era:"qing",y2:1636,label:"1636 女真建大清",sub:"改族名滿洲",
+ note:"明末，原居東北的女真族再度崛起，改族名為「滿洲」，建國號「大清」，取代蒙古成為明朝主要外患。"},
+{id:"y28",ch:6,kind:"time",era:"qing",y2:1644,label:"1644 清兵入關",sub:"李自成破北京→明亡",
+ note:"明末大饑荒造成流寇四起，李自成攻陷北京，明朝滅亡。清兵在明降將吳三桂協助下入關、進占北京，隨後消滅流寇與明朝殘餘勢力。"},
+{id:"y29",ch:6,kind:"time",era:"qing",y2:1723,label:"1723 雍正全面禁教",sub:"禮儀之爭→交流中斷",
+ note:"清初教宗不准中國教徒祭祖祀孔，引發禮儀之爭；雍正即位後因傳教士涉及宮廷政爭，下令全面禁教，中西文化交流趨於沉寂。"},
+
+{id:"y30",ch:7,kind:"time",era:"qing",y2:1757,label:"18世紀中期 廣州一口通商",sub:"乾隆・公行制度",
+ note:"乾隆年間為方便管理外商與維持治安，限制貿易港口僅在廣州，外商須透過公行才能買賣，不能直接與官方往來。英國多次遣使要求放寬，因天朝體制與跪拜禮節爭議而無功而返。"},
+{id:"y31",ch:7,kind:"time",era:"qlate",y2:1840,label:"1840 鴉片戰爭",sub:"林則徐查禁鴉片",
+ note:"英國為平衡貿易逆差大量傾銷鴉片，造成中國白銀外流。道光皇帝派林則徐到廣州查禁鴉片，損害英商利益，英國出兵，1842 年清帝國戰敗。"},
+{id:"y32",ch:7,kind:"time",era:"qlate",y2:1842,label:"1842 南京條約",sub:"割香港・五口通商",
+ note:"《南京條約》：賠款、割讓香港、開放廣州廈門福州寧波上海五口通商。1843 年續約再給予協定關稅、領事裁判權、設立租界、片面最惠國待遇，中國喪失關稅、司法與部分領土主權。"},
+{id:"y33",ch:7,kind:"time",era:"qlate",y2:1853,label:"1853 黑船事件",sub:"美軍叩關→日本開港",
+ note:"19 世紀中期美國軍艦東來日本要求開放通商，1853 年美軍登陸，日本稱之為黑船事件。日本被迫解除鎖國、開港通商，有志之士轉而鼓吹維新運動。"},
+{id:"y34",ch:7,kind:"time",era:"qlate",y2:1857,label:"1857 英法聯軍",sub:"修約被拒→天津條約",
+ note:"英國要求修約以全面通商遭拒，兩度聯合法國出兵（1857–1860）。1858 年簽《天津條約》增開通商口岸（含臺灣），1860 年增開天津並割讓九龍司，列強勢力由沿海深入內地。"},
+{id:"y35",ch:7,kind:"time",era:"qlate",y2:1861,label:"1861 自強運動開始",sub:"器物層面・師夷長技",
+ note:"英法聯軍期間，恭親王奕訢、曾國藩、李鴻章等見識西方船堅炮利，推動自強運動，著重軍事與技術的器物層面改革，成立總理各國事務衙門統籌。"},
+{id:"y36",ch:7,kind:"time",era:"qlate",y2:1868,label:"1868 明治維新",sub:"制度層面・全面西化",
+ note:"明治天皇推動現代化改革，引進西方政治、經濟、軍事制度，採君主立憲、推行義務教育、建立現代化陸海軍，使日本成為亞洲第一個現代化國家，並開始向外擴張。"},
+{id:"y37",ch:7,kind:"time",era:"qlate",y2:1884,label:"1884 清法戰爭",sub:"越南問題→臺灣建省",
+ note:"因越南問題爆發清法戰爭。結果臺灣建省，越南則成為法國殖民地。"},
+{id:"y38",ch:7,kind:"time",era:"qlate",y2:1894,label:"1894 甲午戰爭",sub:"朝鮮問題→馬關條約",
+ note:"日本明治維新後向外擴張，以朝鮮半島與中國東北為目標。朝鮮動亂日本出兵干涉，引發中日衝突。清廷戰敗，北洋艦隊在黃海海戰全軍覆沒。"},
+{id:"y39",ch:7,kind:"time",era:"qlate",y2:1898,label:"1898 戊戌變法",sub:"制度改革・百日維新",
+ note:"甲午戰敗顯示自強運動成效有限，康有為、梁啟超謀求制度層面改革，光緒皇帝下詔變法：精簡政府機構、設立京師大學堂。因動搖守舊派利益，慈禧太后發動戊戌政變，變法僅 103 天。"},
+{id:"y40",ch:7,kind:"time",era:"qlate",y2:1900,label:"1900 義和團・八國聯軍",sub:"扶清滅洋→列強攻北京",
+ note:"清末仇洋反教情緒高漲，義和團以「扶清滅洋」為號召，在北京燒教堂、殺洋人。列強為保護僑民組成八國聯軍攻陷北京。"},
+{id:"y41",ch:7,kind:"time",era:"qlate",y2:1901,label:"1901 辛丑和約・庚子後新政",sub:"廢科舉・編練新軍",
+ note:"清帝國簽訂《辛丑和約》，賠鉅款、外人得駐兵北京，國防與財務損失重大。慈禧太后為籠絡民心推行庚子後新政：廢除科舉、推動新式教育、編練新軍。"},
+{id:"y42",ch:7,kind:"time",era:"qlate",y2:1904,label:"1904 日俄戰爭",sub:"爭奪中國東北",
+ note:"日俄為爭奪中國東北權益爆發戰爭（1904–1905），日本戰勝，勢力進入東北。中國朝野認為這是「立憲戰勝專制」。"},
+{id:"y43",ch:7,kind:"time",era:"qlate",y2:1906,label:"1906 立憲運動",sub:"下詔預備立憲",
+ note:"受日俄戰爭刺激，清廷下詔預備立憲，鼓吹制憲。"},
+{id:"y44",ch:7,kind:"time",era:"qlate",y2:1911,label:"1911 皇族內閣・辛亥革命",sub:"保路運動→武昌起事",
+ note:"清廷成立責任內閣，過半成員為滿族親貴，被譏為「皇族內閣」，立憲派大失所望轉而支持革命。同年鐵路收歸國有引發保路運動，清廷調湖北軍入川鎮壓造成防務空虛，10 月 10 日革命黨人於武昌起事，南方各省陸續獨立。"},
+
+{id:"y45",ch:8,kind:"time",era:"roc1",y2:1912,label:"民1（1912）中華民國建立",sub:"溥儀退位・臨時政府",
+ note:"1912 年元旦中華民國臨時政府在南京成立，孫中山被推選為臨時大總統。袁世凱與臨時政府議和，勸清帝溥儀退位，換取臨時大總統職位，並將首都遷往北京。雙十國慶源自武昌起事，元旦則為民國建立。"},
+{id:"y46",ch:8,kind:"time",era:"roc1",y2:1913,label:"民2（1913）二次革命",sub:"宋教仁遇刺→討袁失敗",
+ note:"國民黨贏得國會大選可望組閣，宋教仁卻遭暗殺，輿論多認為袁世凱是主謀。國民黨起兵討伐袁世凱，失敗，史稱二次革命。"},
+{id:"y47",ch:8,kind:"time",era:"roc1",y2:1915,label:"民4（1915）二十一條・新文化運動",sub:"五九國恥",
+ note:"一次大戰爆發後日本藉口對德宣戰進占山東，1915 年提出「二十一條要求」，袁世凱被迫接受大部分，史稱五九國恥。同年新文化運動興起，提倡民主與科學。"},
+{id:"y48",ch:8,kind:"time",era:"roc1",y2:1916,label:"民5（1916）洪憲帝制",sub:"稱帝遭反對→撤銷",
+ note:"袁世凱於民國 4 年底改國號為中華帝國，以民國 5 年為洪憲元年。因受國內外反對，被迫撤銷帝制，不久病逝。其死後各地將領據地自立，形成軍閥割據。"},
+{id:"y49",ch:8,kind:"time",era:"roc1",y2:1917,label:"民6（1917）南北分裂",sub:"護法・廣州政府",
+ note:"段祺瑞掌控北京政府，拒絕恢復《臨時約法》並加入一次大戰。孫中山號召護法，在廣州另立政府，中國陷入南北分裂（民國 6–17 年）。"},
+{id:"y50",ch:8,kind:"time",era:"roc1",y2:1919,label:"民8（1919）五四運動",sub:"爭山東權益・各階層覺醒",
+ note:"巴黎和會將德國在山東的權益轉給日本，引爆五四運動，爭取山東權益，帶動各階層覺醒，白話文運動與新思潮加速傳播。"},
+{id:"y51",ch:8,kind:"time",era:"roc1",y2:1921,label:"民10（1921）中共成立",sub:"共產主義引進",
+ note:"新文化運動期間引進共產主義，中國共產黨於民國 10 年成立。"},
+{id:"y52",ch:9,kind:"time",era:"roc2",y2:1926,label:"民15（1926）北伐開始",sub:"討伐軍閥・完成統一",
+ note:"孫中山生前聯俄容共、建立黃埔軍校並成立廣州國民政府。民國 15 年國民革命軍誓師北伐，目的是討伐軍閥、完成統一。"},
+{id:"y53",ch:9,kind:"time",era:"roc2",y2:1927,label:"民16（1927）清黨",sub:"國共決裂",
+ note:"北伐期間蔣中正發動清黨，國共決裂，成為北伐的阻力。"},
+{id:"y54",ch:9,kind:"time",era:"roc2",y2:1928,label:"民17（1928）北伐完成",sub:"張學良歸順・結束分裂",
+ note:"張學良宣布歸順國民政府，結束南北分裂，北伐完成，中國形式上統一。"},
+{id:"y55",ch:9,kind:"time",era:"roc2",y2:1931,label:"民20（1931）九一八事變",sub:"東北淪陷",
+ note:"受經濟大恐慌刺激，1930 年代日本軍國主義抬頭。九一八事變後東北淪陷。"},
+{id:"y56",ch:9,kind:"time",era:"roc2",y2:1932,label:"民21（1932）滿洲國",sub:"日本扶植溥儀",
+ note:"日本扶植清廢帝溥儀在東北成立滿洲國。國民政府採「先安內後攘外」，以剿共為先，中共因而展開長征。"},
+{id:"y57",ch:9,kind:"time",era:"roc2",y2:1936,label:"民25（1936）西安事變",sub:"結束剿共・中共轉危為安",
+ note:"西安事變迫使國民政府結束剿共，中共轉危為安，國共形成第二次合作，共同抗日。"},
+{id:"y58",ch:9,kind:"time",era:"roc3",y2:1937,label:"民26（1937）七七事變",sub:"引爆全面戰火",
+ note:"七七事變引爆中日全面戰爭。日軍進攻上海，政府遷都重慶，並發生南京大屠殺。"},
+{id:"y59",ch:9,kind:"time",era:"roc3",y2:1941,label:"民30（1941）珍珠港事變",sub:"美國參戰・歐亞戰場合流",
+ note:"珍珠港事變使美國參戰，中國與盟國並肩作戰，歐亞戰場合流。英美等國放棄在華特權，並召開開羅會議、雅爾達會議。"},
+{id:"y60",ch:9,kind:"time",era:"roc3",y2:1945,label:"民34（1945）日本投降",sub:"原子彈→無條件投降",
+ note:"美國投擲原子彈後，日本無條件投降，中日戰爭結束。"},
+
+/* ---------- 主題（row 5） ---------- */
+{id:"m5Feng",ch:5,kind:"theme",era:"zhou",label:"從封建到郡縣",sub:"地方分權→中央集權",
+ note:"商代封建初建、西周封建完備、東周封建瓦解、秦朝郡縣確立。核心對比：封建＝地方分權、官位世襲；郡縣＝中央集權、中央任免。郡縣制度成為日後國家統治的常態，漢代以後沿用。"},
+{id:"m5Xuan",ch:5,kind:"theme",era:"han",label:"選才制度的演變",sub:"血緣→才能→家世→考試",
+ note:"統治者為有效控制地方、吸納人才而設的選官制度。西周憑血緣世襲→東周用人唯才→漢代察舉與經學取士→曹魏九品官人之法（重家世）→隋唐至清末科舉考試。"},
+{id:"m5Min",ch:5,kind:"theme",era:"han",label:"民族互動與胡漢融合",sub:"農業民族 vs 草原民族",
+ note:"黃河流域的農業民族與北方草原民族長期互動衝突。長城大致成為農業文化與草原文化的分界線。魏晉南北朝是民族融合的重要時期，隋唐則進入華夷一家的開放時代。"},
+{id:"m5Wen",ch:5,kind:"theme",era:"suitang",label:"文化交流與東亞文化圈",sub:"佛教東傳・唐文化外傳",
+ note:"外來宗教（佛教、伊斯蘭教）傳入中國並中國化；唐文化外傳影響新羅、日本、吐蕃，形成以漢字、佛教、律令制度為特徵的東亞文化圈；造紙術則經怛羅斯之役西傳。"},
+
+{id:"m6Liao",ch:6,kind:"theme",era:"song",label:"遼宋金的對抗",sub:"多民族並立・對等外交",
+ note:"契丹建遼取燕雲十六州→北宋重文輕武、以歲幣換和平（澶淵之盟，中國首度對等外交）→女真建金，聯宋滅遼後南下造成靖康之禍→南宋偏安臨安，與金長期對峙。"},
+{id:"m6Yuan",ch:6,kind:"theme",era:"yuan",label:"蒙古帝國與元朝",sub:"三次西征・種族差別",
+ note:"鐵木真建蒙古國→三次西征建立四大汗國，帝國橫跨歐亞→忽必烈建元、滅南宋統一中國→實施蒙古人／色目人／漢人／南人的四等種族差別待遇→帝位繼承紛爭與財政混亂導致瓦解。"},
+{id:"m6Ming",ch:6,kind:"theme",era:"ming",label:"明清帝國的建立",sub:"驅逐蒙古→滿清入關",
+ note:"朱元璋建明、驅逐蒙古；明成祖遷都北京防蒙古並修長城。中期外患（蒙古、倭寇、女真）內憂（流寇）並起，李自成破北京，明亡。清以少數民族入主中國，高壓與懷柔並用，康雍乾三朝將臺灣、蒙古、西藏、新疆納入版圖。"},
+{id:"m6Eco",ch:6,kind:"theme",era:"song",label:"宋元的經濟與文化",sub:"市舶司・紙幣・三大發明",
+ note:"早熟稻引進使糧產大增；坊市制度廢除、夜市興起；設市舶司管理海上貿易、蒙古設驛站打通陸路；出現紙幣。文化上形成理學（朱熹集大成），火藥、活字印刷術、指南針三大發明先後西傳。"},
+{id:"m6Trade",ch:6,kind:"theme",era:"ming",label:"明清商貿與全球網絡",sub:"朝貢・海禁・白銀",
+ note:"明清以天朝自居，透過冊封建立朝貢體制；鄭和下西洋使朝貢攀上顛峰。海禁政策（明防倭寇、清防鄭氏）促成海商走私集團。新航路開通後美洲白銀大量流入，中國進入全球經濟網絡，美洲作物傳入緩解糧食問題。"},
+{id:"m6West",ch:6,kind:"theme",era:"ming",label:"東西文化交流",sub:"耶穌會→禮儀之爭→禁教",
+ note:"耶穌會傳教士東來，利瑪竇以允許祭祖祀孔的變通方式傳教，輸入西方科技、輸出中國典籍與瓷器並引發歐洲中國熱。清初禮儀之爭加上傳教士捲入政爭，雍正下令禁教，交流中斷。日本則實施鎖國，僅准中、荷於長崎貿易，衍生蘭學。"},
+
+{id:"m7Chong",ch:7,kind:"theme",era:"qlate",label:"西力對東亞的衝擊",sub:"中國被迫開港・日本被迫開國",
+ note:"中國：通商限制→鴉片戰爭→南京條約及續約，天朝體制瓦解、開啟百年不平等條約；英法聯軍使列強勢力深入內地。日本：黑船事件後被迫解除鎖國。"},
+{id:"m7Reform",ch:7,kind:"theme",era:"qlate",label:"晚清救國運動",sub:"器物→制度→革命",
+ note:"每一次對外戰敗都刺激一次改革：英法聯軍→自強運動（器物）；甲午戰爭→戊戌變法（制度）；八國聯軍→庚子後新政；日俄戰爭→立憲運動。皇族內閣使立憲派轉而支持革命。"},
+{id:"m7Soc",ch:7,kind:"theme",era:"qlate",label:"晚清社會文化變遷",sub:"城市新風貌・婦女覺醒",
+ note:"通商口岸與租界成為接觸西方文明的窗口，改變飲食、服飾、交通、照明與休閒；報刊雜誌等新媒體加速新思潮傳播；傳統家族觀念鬆動，婦女解放纏足、興辦女學，權利意識與婚姻自由觀念萌芽。"},
+
+{id:"m8Found",ch:8,kind:"theme",era:"roc1",label:"中華民國的建立",sub:"辛亥革命→民主共和",
+ note:"清末知識分子提出改革（君主立憲）與革命兩種救國途徑。孫中山成立興中會、同盟會推翻帝制。保路運動→武昌起事→南方各省獨立→1912 年元旦臨時政府在南京成立。"},
+{id:"m8Yuan",ch:8,kind:"theme",era:"roc1",label:"袁世凱與軍閥統治",sub:"帝制復辟→南北分裂",
+ note:"袁世凱接任臨時大總統並遷都北京；宋教仁遇刺引發二次革命；擴權廢《臨時約法》、接受二十一條、稱帝洪憲。其死後軍閥割據，段祺瑞拒恢復約法，孫中山護法另立廣州政府，形成南北分裂。"},
+{id:"m8New",ch:8,kind:"theme",era:"roc1",label:"新思潮與社會變遷",sub:"新文化運動・五四運動",
+ note:"新文化運動提倡民主與科學、推動白話文運動、引進共產主義；五四運動爭取山東權益，帶動各階層覺醒。此外婦女解放與關注兒童也成為社會新議題。"},
+{id:"m9Bei",ch:9,kind:"theme",era:"roc2",label:"北伐與十年建設",sub:"訓政・以黨治國",
+ note:"孫中山聯俄容共、建黃埔軍校；北伐討伐軍閥，清黨造成國共決裂，張學良歸順完成統一。十年建設期間實施訓政、國民黨以黨治國，財政上收回關稅自主權、廢兩改元、發行法幣；對內剿共、對外因應日本侵略。"},
+{id:"m9War",ch:9,kind:"theme",era:"roc3",label:"日本擴張與中日戰爭",sub:"九一八→七七→投降",
+ note:"經濟大恐慌刺激日本軍國主義抬頭。九一八事變後東北淪陷、扶植滿洲國；西安事變結束剿共促成合作抗日；七七事變引爆全面戰爭；珍珠港事變後美國參戰、歐亞戰場合流，最終日本無條件投降。"},
+
+/* ---------- 重點與實例 ---------- */
+{id:"p5Shang",ch:5,kind:"point",era:"shang",label:"商：封建初建",sub:"共主・關係鬆散",
+ note:"商王透過分封承認既有勢力，維繫共主地位，但彼此關係鬆散，商王控制力有限。"},
+{id:"p5Zhou",ch:5,kind:"point",era:"zhou",label:"西周：封建完備",sub:"分封＋宗法＋禮樂",
+ note:"目的＝鞏固對新征服地的統治。方式＝將爵位、土地和人民分封給宗室、姻親與功臣，使其駐守要地、保衛王室。維繫＝①宗法：以血緣親疏確立貴族身分的繼承順序 ②禮樂：規範貴族依身分等級所能使用的器物或儀式。"},
+{id:"e5Zong",ch:5,kind:"ex",era:"zhou",ord:1,label:"宗法制度",sub:"血緣・嫡長子繼承",
+ note:"以血緣親疏確立貴族身分的繼承順序，嫡長子繼承。天子分封諸侯，諸侯分封卿大夫，並在封地建宗廟祭祀以凝聚族人向心力。"},
+{id:"e5Li",ch:5,kind:"ex",era:"zhou",ord:2,label:"禮樂制度",sub:"貴族專屬・身分等級",
+ note:"規範貴族依據身分等級所能使用的器物或儀式，為貴族專屬，平民和奴隸不得享有。商周時期的青銅器既是藝術品，也是區分貴族與平民、彰顯貴族身分的表徵。"},
+{id:"e5Class",ch:5,kind:"ex",era:"zhou",ord:3,label:"貴族・平民・奴隸",sub:"階級嚴明",
+ note:"貴族（天子、諸侯等）擁有土地，掌握禮樂、官職與受教育之權；平民承擔保家衛國責任；奴隸為貴族提供勞力，沒有生命與財產的自主權。"},
+{id:"p5East",ch:5,kind:"point",era:"ezhou",label:"東周：封建瓦解",sub:"王室衰微・諸侯坐大",
+ note:"春秋（東周前期）王室日漸衰微、諸侯勢力坐大，封建體制鬆動；戰國（東周後期）王室名存實亡，諸侯彼此征戰兼併，封建秩序瓦解。國君為求富國強兵而推動改革、用人唯才。"},
+{id:"e5Shang2",ch:5,kind:"ex",era:"ezhou",ord:1,label:"商鞅變法",sub:"秦國・法治・軍功授爵",
+ note:"①編列戶籍：以家戶為單位登錄人口、性別與年齡，頒布法律管理，有利人力資源運用 ②獎勵耕織與戰鬥：生產布帛糧食多者免徭役，按軍功授予爵位和土地。奠定秦國統一天下的基礎。"},
+{id:"e5Hu",ch:5,kind:"ex",era:"ezhou",ord:2,label:"編列戶籍",sub:"徵兵徵稅的依據",
+ note:"戶籍制度起源於東周，掌握人力作為徵集賦稅和勞役的依據。成年者須繳人頭稅及服徭役。後世中國賦稅有田賦、人頭稅、勞役三種。"},
+{id:"e5Bu",ch:5,kind:"ex",era:"ezhou",ord:3,label:"布衣卿相",sub:"平民參與政治",
+ note:"各國國君為削弱貴族勢力，重用有才能的平民，平民逐漸參與政治，是「用人唯才」的具體表現。"},
+{id:"e5Si",ch:5,kind:"ex",era:"ezhou",ord:4,label:"私人講學",sub:"知識不再被貴族壟斷",
+ note:"流落民間的貴族以學識謀生，私人講學興起，各種學說蓬勃發展（百家爭鳴），平民有機會接受教育，知識不再被貴族壟斷。儒家主張國君施行仁政、重視守禮與倫理秩序。"},
+{id:"p5Qin",ch:5,kind:"point",era:"qin",label:"秦：中央集權確立",sub:"廢封建・行郡縣",
+ note:"①開創皇帝制度：以皇帝為共同稱號，自稱始皇帝 ②廢封建、行郡縣：郡縣長官由中央直接任免、不再世襲 ③統一文物：文字（小篆）、貨幣（半兩錢）、車軌和度量衡。以法治國，中央集權成為日後統治常態。"},
+{id:"e5Huang",ch:5,kind:"ex",era:"qin",ord:1,label:"皇帝制度",sub:"始皇帝・德兼三皇功過五帝",
+ note:"秦王嬴政以「皇帝」作為君王新稱號，自稱「始皇帝」。中國的帝制自秦始皇起，至清宣統在位時結束。"},
+{id:"e5Jun",ch:5,kind:"ex",era:"qin",ord:2,label:"郡縣制度",sub:"中央任免・非世襲",
+ note:"東周時期已有部分國家設郡縣以直接掌控地方，秦朝全面推行。郡縣呈報戶口、賦稅給丞相，再上呈皇帝。隋唐沿用，並影響日本、朝鮮。"},
+{id:"e5Tong",ch:5,kind:"ex",era:"qin",ord:3,label:"統一文物制度",sub:"文字・貨幣・度量衡",
+ note:"文字：齊楚燕韓趙魏各異，統一為秦小篆（後隸書出現，西元前 2 世紀漢朝定隸書為官方文字）。貨幣：刀幣（齊）、蟻鼻錢（楚）、布錢（韓趙魏）、圜錢（秦）統一為半兩錢。有助帝國內部整合與各地經濟文化交流。"},
+{id:"e5QinFall",ch:5,kind:"ex",era:"qin",ord:4,label:"秦朝滅亡",sub:"高壓統治・濫用民力",
+ note:"統治嚴厲，又壓迫人民興修長城、宮殿與陵寢等大型工程，濫用民力，人民群起反抗而滅亡。但中央集權體制已確立，成為日後國家統治的常態。"},
+
+{id:"p5Cha",ch:5,kind:"point",era:"han",label:"漢：察舉與經學取士",sub:"品德・儒家經典",
+ note:"察舉＝地方官員定期向中央推舉孝子、廉吏，流弊是推舉不公、標準不一。經學取士＝在中央設太學教授儒家經典，成績優秀者可任官。熟讀經學成為任官重要途徑，至漢末形成「經學傳家、累世當官」的世族，儒家思想成為中國思想文化主流。"},
+{id:"e5Shi",ch:5,kind:"ex",era:"han",label:"世族的形成",sub:"經學傳家・累世當官",
+ note:"士人將經書見解傳授給家族子弟，逐漸形成經學傳家、累世當官的世家大族。世族重視門第觀念，婚配、交友講究門當戶對。"},
+{id:"p5Jiu",ch:5,kind:"point",era:"wei",label:"曹魏：九品官人之法",sub:"重家世・世族鼎盛",
+ note:"漢末戰亂人才流離、地方鄉舉困難，曹魏改由中央派官員到各地，依家世（最看重）、才能、德行分九品授官。流弊：評選流於形式，世族子弟擁有任官優勢，形成「上品無寒門，下品無世族」。世族因而掌握政治權力、擁有土地並享減免賦稅的經濟特權，勢力達於鼎盛。"},
+{id:"e5Shang3",ch:5,kind:"ex",era:"wei",label:"上品無寒門，下品無世族",sub:"九品官人法的弊端",
+ note:"九等第分上品（上上、上中、上下）、中品（中上、中中、中下）、下品（下上、下中、下下）。評比看重家世，寒門難入上品，世族不落下品，對統治者維繫政權造成威脅，皇帝也得妥協。"},
+{id:"p5Ke",ch:5,kind:"point",era:"suitang",label:"隋唐：科舉制度",sub:"分科考試・階層流動",
+ note:"隋朝為抑制世族勢力廢除九品官人之法，改行科舉；唐宋更完善，沿用至清末（庚子後新政時廢除）。影響：①世族沒落，逐漸退出政治舞臺 ②平民任官機會增加，促進社會階層流動 ③帶動讀書教育風氣，有利帝國統治。"},
+
+{id:"p5Xiong",ch:5,kind:"point",era:"han",label:"匈奴與長城",sub:"農牧分界線",
+ note:"東周時代匈奴興起，黃河中下游國家修築城牆防禦；秦連接各國城牆為長城。長城大致成為農業文化與草原文化的分界線。漢初國力弱對匈奴採和親與貿易，漢武帝轉為出兵征伐。"},
+{id:"e5Zhang",ch:5,kind:"ex",era:"han",ord:1,label:"張騫出使西域",sub:"漢武帝・聯絡西域",
+ note:"漢武帝派張騫出使西域，聯絡西域各國對抗匈奴。西域通常指玉門關以西之地，即今新疆、中亞一帶。"},
+{id:"e5Silk",ch:5,kind:"ex",era:"han",ord:2,label:"絲路",sub:"絲綢西銷・佛教東傳",
+ note:"帶動東西貿易：中國絲綢大量銷往西方（經絲路傳入羅馬帝國）；西域的物產、音樂、雜技與佛教等經絲路傳入中國。"},
+{id:"p5Yong",ch:5,kind:"point",era:"wei",label:"永嘉之禍與江南開發",sub:"晉室南遷・第一次大規模南遷",
+ note:"漢末胡人移居黃河流域，與漢人因風俗差異產生摩擦。西晉末年胡人攻陷洛陽（永嘉之禍），晉室南遷開創東晉。北方南遷漢人帶來農耕技術與人力，加速長江流域開發，為日後經濟文化中心南移埋下伏筆。"},
+{id:"p5Bei",ch:5,kind:"point",era:"wei",label:"北魏孝文帝漢化",sub:"鮮卑・胡漢融合",
+ note:"胡人君主為平息胡漢衝突、鞏固政權而推動融合。措施：①遷都平城→洛陽 ②禁胡服改漢服（胡左衣衽→漢右衣衽）③禁北語改說漢語 ④改漢姓（拓跋→元）⑤鼓勵胡漢通婚。漢人生活也受胡人影響，如食羊肉、喝酪乳。"},
+{id:"p5Tian",ch:5,kind:"point",era:"suitang",label:"天可汗與華夷一家",sub:"唐太宗・平等開放",
+ note:"隋唐皇室多具胡人血統，對外族採平等開放態度。唐太宗擊滅東突厥，被西北各族尊為天可汗，唐成為東亞秩序盟主。外族商人、僧侶、留學生大量移居中國，甚至擔任官員，長安城胡商雲集。"},
+{id:"e5Hu2",ch:5,kind:"ex",era:"suitang",label:"胡風",sub:"胡服・胡食・胡旋舞",
+ note:"唐人喜喝葡萄酒、穿短衣窄袖的胡服，休閒以胡旋舞為娛樂，「漢戴胡帽，胡戴漢帽」體現民族文化交流。唐三彩陶器多胡人造型。"},
+
+{id:"p5Fo",ch:5,kind:"point",era:"wei",label:"佛教傳入與中國化",sub:"漢傳入→南北朝盛→唐鼎盛",
+ note:"起源於印度，漢代（1 世紀）經西域傳入。魏晉南北朝戰亂頻繁，宗教成為人民精神寄託，加上帝王提倡與佛經翻譯而廣為流傳，石窟藝術盛行。唐代達於鼎盛，玄奘赴印度取經、返國後主持譯經，促進佛教中國化。"},
+{id:"e5Ku",ch:5,kind:"ex",era:"wei",label:"三大石窟",sub:"敦煌莫高・大同雲岡・洛陽龍門",
+ note:"莫高窟（甘肅敦煌）、雲岡石窟（山西大同）、龍門石窟（河南洛陽）。胡人君主信佛，推動大型佛像石窟藝術。"},
+{id:"e5Xuan2",ch:5,kind:"ex",era:"suitang",label:"玄奘取經",sub:"7世紀・譯經・佛教中國化",
+ note:"唐初玄奘前往印度取經，回國後主持大量佛經翻譯，有助佛教與中國本土思想文化融合，發展出具本土特色的內容。"},
+{id:"e5Yi",ch:5,kind:"ex",era:"suitang",label:"伊斯蘭教傳入",sub:"唐代・穆斯林商人",
+ note:"唐代（7 世紀）由穆斯林商人經波斯、阿拉伯傳入中國，中國現存最早的清真寺建於唐代廣州，展現宗教多元風貌。"},
+{id:"p5Dong",ch:5,kind:"point",era:"suitang",label:"東亞文化圈",sub:"漢字・佛教・律令制度",
+ note:"唐朝前期國力強盛、文化發達，吸引周邊國家前往學習。新羅、日本派遣使節積極模仿唐朝制度與文化，形成以漢字、佛教、律令制度為特徵的東亞文化圈。"},
+{id:"e5Xin",ch:5,kind:"ex",era:"suitang",ord:1,label:"新羅（君子國）",sub:"7世紀統一朝鮮半島",
+ note:"新羅 7 世紀統一朝鮮半島南部，加強中央集權，全力模仿中國文字、曆法、儒學和佛教，有「君子國」之稱。"},
+{id:"e5Ri",ch:5,kind:"ex",era:"suitang",ord:2,label:"日本・大化革新",sub:"7世紀中期・唐化運動",
+ note:"日本多次派遣使節團、學生與僧侶到長安學習中國文化與佛法（儒家思想、律令制度、文字）。7 世紀中期天皇推動唐化運動，建立以天皇為中心的集權國家，史稱大化革新。日文假名仿自漢字（片假名：仁→ニ、千→チ；平假名：太→た、加→か）。"},
+{id:"e5Tubo",ch:5,kind:"ex",era:"suitang",ord:3,label:"文成公主和親吐蕃",sub:"漢藏交流・農業技術",
+ note:"唐太宗時文成公主嫁到吐蕃（今西藏），宣揚佛教並將中原農業技術帶入西藏，吐蕃亦派貴族子弟到唐留學。"},
+{id:"e5Zhi",ch:5,kind:"ex",era:"suitang",ord:4,label:"怛羅斯之役・造紙術西傳",sub:"8世紀・唐 vs 大食",
+ note:"唐軍與大食（阿拉伯帝國）交戰於中亞怛羅斯，唐軍戰敗，被俘士兵中有造紙工匠，造紙術因而西傳。造紙術由漢代蔡倫改良，有助知識流通。"},
+
+{id:"p6Qidan",ch:6,kind:"point",era:"song",label:"契丹建遼",sub:"取燕雲十六州・北方強權",
+ note:"契丹族於唐亡後在中國東北崛起建遼，取得長城以南的漢人農業區燕雲十六州（後晉石敬瑭所割讓），使漢人政權北方屏障盡失、北防洞開。女真、西夏、高麗都向遼稱臣納貢，遼成為東亞國際局勢的主導者。"},
+{id:"e6Yan",ch:6,kind:"ex",era:"song",label:"燕雲十六州",sub:"長城以南・北方屏障",
+ note:"位於長城以南，是漢人政權的北方屏障。遼取得後長城失去防禦功能，北宋屢次試圖收復而與遼衝突。"},
+{id:"p6Bei",ch:6,kind:"point",era:"song",label:"北宋：重文輕武",sub:"強幹弱枝・軍力貧弱",
+ note:"宋太祖趙匡胤結束多國並立，杯酒釋兵權、召回地方將領、命文臣守地方，兵權收歸中央，改正軍人干政惡習；但偏重文人政治使軍事實力貧弱，難以應付外敵、邊防不振。"},
+{id:"e6Chan",ch:6,kind:"ex",era:"song",ord:1,label:"澶淵之盟",sub:"1004・對等外交・歲幣",
+ note:"宋真宗時遼軍南侵，真宗御駕親征（寇準力主），雙方簽約議和：①北宋每年支付遼銀、絹等歲幣 ②雙方君主以兄弟相稱，中國首度與周邊國家建立對等關係。宋遼維持百餘年和平。"},
+{id:"p6Jin",ch:6,kind:"point",era:"song",label:"女真建金",sub:"聯宋滅遼→南下滅宋",
+ note:"北宋末年東北女真族建金。與北宋結盟滅遼後，因宋軍衰弱而轉攻北宋，攻陷汴京、俘虜徽欽二帝。"},
+{id:"e6Jing",ch:6,kind:"ex",era:"song",label:"靖康之禍",sub:"1127・北宋滅亡",
+ note:"金兵攻陷宋都汴京、俘虜皇帝，史稱靖康之禍，北宋滅亡。與永嘉之禍並列為外族入侵首都導致亡國的兩大事件。"},
+{id:"p6Nan",ch:6,kind:"point",era:"song",label:"南宋偏安臨安",sub:"岳飛抗金・南北對峙",
+ note:"殘餘宋室南遷定都臨安（今浙江杭州）。金持續南下，遭岳飛等人力抗，勢力無法越過長江以南，雙方簽和議形成南北對峙，最後南宋亡於元。"},
+
+{id:"p6Meng",ch:6,kind:"point",era:"yuan",label:"蒙古國與三次西征",sub:"鐵木真・四大汗國",
+ note:"13 世紀初鐵木真統一蒙古各部建國，被尊為成吉思汗。與後繼者發動三次西征：第一次繞裏海占俄羅斯（成吉思汗）、第二次向西北至東歐（拔都）、第三次向西南至西亞（旭烈兀），建立欽察、窩闊臺、察合臺、伊兒四大汗國。期間滅西夏，並與南宋合作滅金。"},
+{id:"e6Xi",ch:6,kind:"ex",era:"yuan",label:"四大汗國",sub:"橫跨歐亞・都城和林",
+ note:"欽察汗國（俄羅斯）、窩闊臺汗國、察合臺汗國、伊兒汗國（波斯）。蒙古國都城為和林。西征促進歐亞經濟與文化交流，打通歐亞陸路交通。"},
+{id:"p6YuanD",ch:6,kind:"point",era:"yuan",label:"元世祖忽必烈",sub:"定都大都・滅南宋",
+ note:"鐵木真之孫忽必烈建立元朝，定都大都（今北京），南下滅南宋完成中國統一，蒙古成為第一個統治整個中國的草原民族。曾再向日本與越南出兵，失敗後終止對外擴張。與四大汗國漸行漸遠。"},
+{id:"e6Zhong",ch:6,kind:"ex",era:"yuan",label:"四等種族政策",sub:"蒙古・色目・漢人・南人",
+ note:"蒙古人地位最高，擔任重要官職；色目人為西域以西各族統稱，多負責財政（收稅）；漢人指原受金統治的漢人、契丹人、女真人；南人為原受南宋統治的漢人及南方各族，地位最低。後兩者在政治、法律與科舉皆受不平等待遇。"},
+{id:"p6MingJ",ch:6,kind:"point",era:"ming",label:"明太祖朱元璋",sub:"平民出身・定都應天",
+ note:"元末群雄並起，朱元璋擊敗群雄、攻占金陵（今南京），定都應天，國號大明，北上驅逐蒙古人。是第一個崛起於江南而統一中國的政權。"},
+{id:"e6Qian",ch:6,kind:"ex",era:"ming",label:"明成祖遷都北京",sub:"防蒙古・修長城",
+ note:"明成祖為防範退守長城以北的蒙古人，將首都由應天遷到北京，並修長城、北伐蒙古，國勢達到鼎盛。與北魏孝文帝為漢化而遷都洛陽並列為主動遷都的例子。"},
+{id:"e6Liu",ch:6,kind:"ex",era:"ming",label:"流寇李自成",sub:"大饑荒・攻陷北京",
+ note:"明末大饑荒造成大批災民與饑兵結合形成流寇，其中以李自成勢力最大，攻陷北京，導致明朝滅亡。"},
+{id:"p6Qing",ch:6,kind:"point",era:"qing",label:"清的入關與盛世",sub:"高壓懷柔並用",
+ note:"明降將吳三桂引清軍入關，進占北京並消滅流寇與明朝殘餘勢力。清以少數民族入主，對漢人高壓（薙髮留辮、大興文字獄）與懷柔（禮遇明遺臣、舉行科舉）並用，對蒙古、西藏則以宗教與婚盟拉攏。康雍乾三朝將臺灣、蒙古、西藏、新疆納入版圖，史稱康雍乾盛世。"},
+
+{id:"p6Nong",ch:6,kind:"point",era:"song",label:"早熟稻與農業",sub:"占城引進・糧產大增",
+ note:"宋代自占城（今越南）引進早熟稻，配合盛行的耕作技術使稻米產量大增，成為最重要的糧食作物，促進人口成長與經濟活躍。"},
+{id:"p6Shi",ch:6,kind:"point",era:"song",label:"市舶司與國際貿易",sub:"廣州泉州・海陸並進",
+ note:"唐代始在廣州設市舶司，宋元在廣州、泉州設立，負責管理商船、檢查貨物與徵稅，功能類似今日海關，稅收成為政府重要財源。宋代陸路受西夏阻隔而不發達，以海路為主；元代蒙古西征打通東西陸路並廣設驛站，形成大型國際貿易體系。"},
+{id:"e6Fang",ch:6,kind:"ex",era:"song",ord:1,label:"坊市制度廢除",sub:"夜市出現",
+ note:"唐中期以前坊（住宅區）、市（商業區）之間築牆區隔，有固定開放與關閉時間。自宋代起坊市合一，商人可隨處、隨時交易，夜市因而興旺。"},
+{id:"e6Qing2",ch:6,kind:"ex",era:"song",ord:2,label:"清明上河圖",sub:"張擇端・汴京榮景",
+ note:"北宋畫家張擇端所繪，描繪當時汴京城的榮景與貿易興盛，畫中可見說書（瓦子）、酒樓正店、塞外駱駝商隊。"},
+{id:"e6Zhi2",ch:6,kind:"ex",era:"song",ord:3,label:"紙幣（交子・寶鈔）",sub:"世界最早的紙幣",
+ note:"宋代因銅錢流向海外、貨幣流通不足，四川商人聯合發行「交子」，被視為中國紙幣起源；南宋稱「會子」，元朝稱「寶鈔」，寶鈔上印有「偽造者處死」。中國貨幣演變：秦統一銅錢→宋元紙幣→明清白銀與銅錢並用→中華民國法幣。"},
+{id:"p6Li",ch:6,kind:"point",era:"song",label:"理學與朱熹",sub:"儒學融合佛學・四書集注",
+ note:"宋代政府重視文人政治、提倡儒學，儒家學者融合佛學等思想形成「理學」。南宋朱熹集大成，著《四書集注》（論語、孟子、大學、中庸），元代以後成為科舉考試的標準本，並傳入朝鮮、日本。"},
+{id:"p6San",ch:6,kind:"point",era:"song",label:"三大發明西傳",sub:"指南針・活字印刷・火藥",
+ note:"指南針：宋代用於航海，經阿拉伯人傳入歐洲，有助日後新航路發現。活字印刷術：北宋畢昇發明膠泥活字，改善不能重新排版的缺點，經蒙古西征傳入歐洲，影響宗教改革與啟蒙運動。火藥：宋代應用於戰爭，經蒙古人改良後傳入歐洲，改變戰爭型態。"},
+
+{id:"p6Chao",ch:6,kind:"point",era:"ming",label:"朝貢體制",sub:"天朝・冊封・藩屬國",
+ note:"明清以天朝自居，透過冊封建立以中國為中心的世界觀。只有受冊封的國家才能以進貢名義通商，並得到中國支持與保護（如朝鮮、琉球，稱為藩屬國）。宗主國給予冊封與賞賜，藩屬國則職貢、朝覲、進貢。"},
+{id:"e6Zheng",ch:6,kind:"ex",era:"ming",label:"鄭和下西洋",sub:"1405–1433・七次・至非洲東岸",
+ note:"明成祖派鄭和率船隊出使西洋（今東南亞、印度洋一帶），最遠抵非洲東岸。共七次、船隊約二百多艘、人數約二萬餘人，海域含東海、南海、印度洋、紅海。影響：明帝國聲威遠播、朝貢體制攀上顛峰，漢人大量移民東南亞，奠定華僑在東南亞的政經基礎。當時以渤泥為界，以西稱西洋。"},
+{id:"p6Hai",ch:6,kind:"point",era:"ming",label:"海禁政策",sub:"明防倭寇・清防鄭氏",
+ note:"明初為防備倭寇實施海禁，禁止民間擅自出海、限制外商到中國通商；廣東、福建居民迫於生計仍私自出海，形成擁有武裝力量的海商走私集團。明後期（16 世紀中期）平定倭寇後局部解除，漢人海商貿易網遍及中國、日本與東南亞。清初則為圍堵鄭氏而海禁（片板不許下海，粒貨不許越疆），攻下臺灣後解除。"},
+{id:"p6Yin",ch:6,kind:"point",era:"ming",label:"白銀與美洲作物",sub:"全球經濟網絡",
+ note:"新航路開通後歐洲人在東亞建立據點，以日本、歐洲與美洲的白銀購買中國絲綢、瓷器、茶葉，再轉賣世界各地獲取高利，加速全球經濟網絡形成。影響：①白銀流入中國，取代嚴重貶值的紙幣，形成白銀與銅錢並用 ②玉米、番薯、馬鈴薯等美洲作物傳入，緩和人口增加造成的糧食不足。海商貿易對象也從朝貢體制國家轉向馬尼拉（西）、澳門（葡）、大員（荷）等殖民者。"},
+{id:"e6Zhen",ch:6,kind:"ex",era:"ming",label:"專業市鎮",sub:"景德鎮製瓷",
+ note:"隨著市場擴大與分工細密，專業市鎮紛紛興起，如江西景德鎮是製瓷業中心。瓷器十四世紀帶動商機，結合中國和波斯的原料，十六世紀由西班牙船隻從馬尼拉運往美洲販賣。"},
+{id:"p6Li2",ch:6,kind:"point",era:"ming",label:"利瑪竇與耶穌會",sub:"允許祭祖祀孔・輸入西學",
+ note:"天主教耶穌會推動教會改革、積極向外傳教，隨探險隊和商人東來。利瑪竇允許中國教徒祭祖祀孔（稱利瑪竇規矩），並向士大夫介紹西學，奠定天主教在華發展基礎。輸入西學包括數學、地理學、火炮與天文曆法。"},
+{id:"e6Ji",ch:6,kind:"ex",era:"ming",ord:1,label:"幾何原本・徐光啟",sub:"利瑪竇合譯",
+ note:"利瑪竇與徐光啟合譯《幾何原本》；利瑪竇並繪製中國第一幅具有完整經緯的世界地圖（坤輿萬國全圖）。"},
+{id:"e6Hot",ch:6,kind:"ex",era:"ming",ord:2,label:"歐洲中國熱",sub:"儒家經典・園林・瓷器",
+ note:"傳教士將中國典籍、園林建築、瓷器、醫藥等傳入歐洲，引發 17～18 世紀歐洲的「中國熱」，如法王路易十四曾派傳教士出使中國，建造凡爾賽宮時使用中式裝潢。"},
+{id:"e6Rite",ch:6,kind:"ex",era:"qing",ord:3,label:"禮儀之爭",sub:"教宗禁祭祖祀孔",
+ note:"清初教宗不准中國天主教徒祭祖、祀孔，引發禮儀之爭。康熙皇帝取消傳教許可但未嚴格實施。"},
+{id:"e6Suo",ch:6,kind:"ex",era:"ming",label:"日本鎖國與蘭學",sub:"長崎・限中荷",
+ note:"天主教傳入日本後與傳統文化衝突、引起社會不安，江戶幕府於 17 世紀前期實施鎖國，限制西方傳教士與商人活動，只准中國和荷蘭商船至長崎貿易。日人稱荷蘭商人帶來的西方學術為「蘭學」，為近代日本科學發展奠基。"},
+
+{id:"p7Guang",ch:7,kind:"point",era:"qing",label:"廣州一口通商",sub:"乾隆・公行・天朝體制",
+ note:"大航海時代歐洲商人陸續來華。乾隆年間為方便管理外商與維持治安，限制貿易港口僅在廣州，外商須透過公行買賣、不能直接與官方往來。18 世紀中期後英國為拓展市場陸續遣使來華要求放寬，因天朝體制與跪拜禮節爭議無功而返，衝突越發激烈。"},
+{id:"p7Opium",ch:7,kind:"point",era:"qlate",label:"鴉片戰爭",sub:"林則徐查禁鴉片・1840",
+ note:"工業革命後英國急需中國市場，又大量購買中國茶葉，為平衡貿易逆差將印度種植的鴉片銷往中國，損害中國人民健康並造成白銀大量外流。道光皇帝派林則徐到廣州查禁鴉片（強制沒收、銷毀），英商利益受損，英國出兵藉此打開中國門戶，1842 年清帝國戰敗。"},
+{id:"e7Nan",ch:7,kind:"ex",era:"qlate",ord:1,label:"南京條約",sub:"賠款・割香港・五口通商",
+ note:"1842 年（道光 22 年）簽訂：賠款、割讓香港、開放五口通商（廣州、廈門、福州、寧波、上海）。打破中國天朝體制，開啟百年不平等條約的束縛，結束閉關自守。"},
+{id:"e7Priv",ch:7,kind:"ex",era:"qlate",ord:2,label:"續約四大特權",sub:"關稅・領判・租界・最惠國",
+ note:"1843 年續約給予英國：①協定關稅－關稅需與外國政府協議，破壞關稅自主權（十年建設期間收回）②領事裁判權－外人在華不受中國法律約束，破壞司法自主權 ③設立租界－外國人居住區不受中國政府管轄，形成國中之國，破壞領土主權 ④片面最惠國待遇－使權利一體均霑。"},
+{id:"p7Ying",ch:7,kind:"point",era:"qlate",label:"英法聯軍",sub:"修約被拒・天津條約",
+ note:"英國希望修約與中國全面通商遭清廷拒絕，兩度聯合法國出兵（1857–1860）。1858 年簽《天津條約》增開沿海（北方、臺灣、海南）與長江沿岸口岸，使列強勢力由沿海深入內地；1860 年增開天津並割讓九龍司。"},
+{id:"p7Hei",ch:7,kind:"point",era:"qlate",label:"黑船事件",sub:"美軍叩關・日本開港",
+ note:"19 世紀中期美國軍艦東來日本要求開放通商，1853 年美軍登陸，日本稱之為黑船事件，被迫解除鎖國、開港通商，有志之士鼓吹維新運動。"},
+{id:"p7Ziqiang",ch:7,kind:"point",era:"qlate",label:"自強運動",sub:"器物層面・1861–1894",
+ note:"英法聯軍期間恭親王奕訢、曾國藩、李鴻章等見識西方船堅炮利而推動。內容：外交＝成立總理各國事務衙門統籌；軍事＝設兵工廠、新式造船廠、成立北洋艦隊；交通＝修築鐵路、架電報；教育＝設新式學堂、官派留學生赴歐美。成效有限：側重器物層面缺乏整體規畫，守舊派反對勢力強大，甲午戰敗顯示改革成效有限；但傳播新觀念與培養人才，奠定現代化基礎。"},
+{id:"e7Zong",ch:7,kind:"ex",era:"qlate",ord:1,label:"總理各國事務衙門",sub:"自強運動統籌機構",
+ note:"成立於自強運動初期，統籌外交事務，日後成為推行自強運動的機構。"},
+{id:"e7Bei",ch:7,kind:"ex",era:"qlate",ord:2,label:"北洋艦隊",sub:"黃海海戰全軍覆沒",
+ note:"自強運動時期建立的近代海軍，在甲午戰爭的黃海海戰遭到重創、全軍覆沒。"},
+{id:"p7Meiji",ch:7,kind:"point",era:"qlate",label:"明治維新",sub:"制度層面・1868",
+ note:"明治天皇推動現代化改革，引進西方政治、經濟、軍事制度：採君主立憲、推行義務教育、建立現代化陸海軍、遷都東京、派使節團訪歐。日本成為亞洲第一個現代化國家，國力增強後積極向外擴張，出兵臺灣（牡丹社事件）、吞併琉球，並介入朝鮮內政。"},
+{id:"p7Jia",ch:7,kind:"point",era:"qlate",label:"甲午戰爭",sub:"朝鮮問題・1894–1895",
+ note:"日本以朝鮮半島與中國東北為擴張目標。朝鮮動亂日本出兵干涉，中日爆發衝突，清廷戰敗。"},
+{id:"e7Ma",ch:7,kind:"ex",era:"qlate",ord:1,label:"馬關條約",sub:"割臺澎・通商口岸設廠",
+ note:"1895 年簽訂：①清廷承認朝鮮獨立（日本於 1910 年併吞朝鮮）②割讓臺灣、澎湖、遼東半島（遼東後因俄國介入由中國贖回）③允許日人在通商口岸設廠製造，歐美列強援引最惠國待遇比照，衝擊中國本土工商業發展。"},
+{id:"e7Gua",ch:7,kind:"ex",era:"qlate",ord:2,label:"瓜分風潮・勢力範圍",sub:"租借港灣・畫分勢力",
+ note:"日本國際地位提升，中國面臨瓜分危機，列強要求租借港灣、畫分勢力範圍：俄國（旅順大連／長城以北、東北）、德國（膠州灣／山東）、英國（威海衛、新界／長江流域）、日本（無／福建）、法國（廣州灣／西南地區）。租借期滿可收回，香港 1997 年回歸即來自新界租期屆滿。美國另提門戶開放政策要求列強開放勢力範圍供各國貿易。"},
+{id:"p7Wu",ch:7,kind:"point",era:"qlate",label:"戊戌變法",sub:"制度改革・百日維新",
+ note:"甲午戰敗象徵自強運動成效有限，康有為、梁啟超謀求制度層面改革。光緒 24 年（1898）光緒皇帝採納康梁建議下詔變法：裁撤冗員、精簡政府機構、設立京師大學堂。內容龐雜、動搖守舊派利益，慈禧太后與守舊派發動戊戌政變，變法僅 103 天，故稱百日維新，革新措施僅存京師大學堂。"},
+{id:"e7Jing",ch:7,kind:"ex",era:"qlate",label:"京師大學堂",sub:"北京大學前身",
+ note:"戊戌變法設立，主張「中學為體，西學為用」，是今日北京大學的前身，也是變法後僅存的革新措施。"},
+{id:"p7Ba",ch:7,kind:"point",era:"qlate",label:"八國聯軍",sub:"義和團・扶清滅洋",
+ note:"清末各地民眾仇洋反教情緒高漲。1900 年義和團（又稱義和拳的民間宗教團體，成員稱拳民）以「扶清滅洋」為號召，在北京燒教堂、殺洋人。列強為保護僑民組成八國聯軍攻陷北京。"},
+{id:"e7Xin",ch:7,kind:"ex",era:"qlate",label:"辛丑和約",sub:"賠鉅款・外人駐兵北京",
+ note:"1901 年簽訂，賠鉅款、外人得駐兵北京，造成國防與財務上的重大損失。"},
+{id:"p7Geng",ch:7,kind:"point",era:"qlate",label:"庚子後新政",sub:"慈禧太后・廢科舉",
+ note:"八國聯軍後慈禧太后為籠絡民心推行新政：廢除科舉制度、推動新式教育培養新知識分子、編練新軍。科舉自隋朝開始，至此正式廢除。"},
+{id:"p7RiE",ch:7,kind:"point",era:"qlate",label:"日俄戰爭",sub:"爭東北・立憲勝專制",
+ note:"1904–1905 年日俄為爭奪中國東北權益爆發戰爭，君主立憲的日本戰勝君主專制的俄國，勢力逐漸進入東北。清末中國東北的競逐：甲午後俄國將東北劃入勢力範圍、八國聯軍時俄國趁機占東北、日俄戰後日本介入東北事務。"},
+{id:"p7Lixian",ch:7,kind:"point",era:"qlate",label:"立憲運動",sub:"預備立憲→皇族內閣",
+ note:"日俄戰爭使中國朝野認為是「立憲戰勝專制」，因而鼓吹制憲。1906 年下詔預備立憲，1911 年成立責任內閣，但過半成員為滿族親貴，被譏為「皇族內閣」。立憲派大失所望，轉而支持革命。"},
+{id:"p7City",ch:7,kind:"point",era:"qlate",label:"城市新風貌",sub:"通商口岸・租界・上海",
+ note:"鴉片戰爭後陸續開放通商口岸，各國開闢的租界成為接觸西方文明的窗口，以上海最具代表性。引進自來水、電車、電燈等設施促進生活現代化；飲食有西餐與咖啡廳、服飾流行西裝洋裝與斷髮放足、交通有西式馬車與汽車、休閒有歌劇電影與賽馬。但鄉村仍維持傳統生活模式，城鄉差距擴大。"},
+{id:"e7Media",ch:7,kind:"ex",era:"qlate",label:"新媒體・萬國公報",sub:"報刊雜誌・電報郵政",
+ note:"19 世紀中期西方人在通商口岸創辦報刊雜誌引進新思潮，如《萬國公報》、《申報》，成為介紹中外時事與西方新思潮的重要媒介；知識分子利用媒體發表言論，增進大眾對公眾事務的關心。重要口岸城市並鋪設電報線、設郵政機構。"},
+{id:"p7Woman",ch:7,kind:"point",era:"qlate",label:"婦女角色轉變",sub:"不纏足・興辦女學",
+ note:"傳統家族以宗族為生活核心、累世同居共財，婦女須遵守三從四德、受纏足限制行動，婚姻憑父母之命。西方思潮引進與新知識分子（傳教士、梁啟超等）倡導後，男尊女卑觀念受批評，發起不纏足運動、興辦女學，婦女權利意識與婚姻自由觀念萌芽，女性逐漸走出家庭。通商口岸的工商業也間接增加婦女就業機會。"},
+
+{id:"p8Xin",ch:8,kind:"point",era:"roc1",label:"辛亥革命",sub:"保路運動→武昌起事",
+ note:"清末知識分子提出改革與革命兩種救國途徑，孫中山成立興中會、同盟會試圖推翻帝制、建立民主共和。1911 年清廷將民間集資興建的鐵路收歸國有，引發保路運動，四川抗爭最激烈；清廷調湖北軍隊入川鎮壓造成湖北防務空虛，10 月 10 日革命黨人於武昌起事，南方各省陸續宣告獨立。清廷派袁世凱南下鎮壓。"},
+{id:"e8Found",ch:8,kind:"ex",era:"roc1",label:"孫中山任臨時大總統",sub:"1912元旦・南京",
+ note:"1912 年元旦中華民國臨時政府在南京成立，孫中山被推選為臨時大總統。雙十國慶源自武昌起事，元旦則為民國建立。"},
+{id:"p8Yuan",ch:8,kind:"point",era:"roc1",label:"袁世凱主政",sub:"南北議和→洪憲帝制",
+ note:"袁世凱與臨時政府議和，勸清帝退位換取臨時大總統職位，就職前臨時政府通過《臨時約法》改採內閣制以防其專權。袁將首都遷往北京就職，其後解散國會、廢除《臨時約法》，接受二十一條，最後改國號中華帝國稱帝，因國內外反對而撤銷，不久病逝。"},
+{id:"e8Lin",ch:8,kind:"ex",era:"roc1",ord:1,label:"臨時約法",sub:"內閣制・虛位元首",
+ note:"民國元年由南京參議院通過，原採總統制，為防袁世凱專權改行內閣制，總統為虛位元首，內閣總理負責實際政務。"},
+{id:"e8Song",ch:8,kind:"ex",era:"roc1",ord:2,label:"宋教仁遇刺",sub:"1913・輿論指袁世凱",
+ note:"民國 2 年國民黨贏得國會大選、可望組織內閣，宋教仁卻遭暗殺，輿論多認為袁世凱是主謀。"},
+{id:"e8Er",ch:8,kind:"ex",era:"roc1",ord:3,label:"二次革命",sub:"國民黨討袁失敗",
+ note:"國民黨起兵討伐袁世凱，失敗。此後袁世凱就任正式大總統，解散國會、廢除《臨時約法》。"},
+{id:"e8Er2",ch:8,kind:"ex",era:"roc1",ord:4,label:"二十一條要求",sub:"五九國恥・山東",
+ note:"民國 3 年一次大戰爆發，日本藉口對德宣戰進占山東（德國的勢力範圍）；民國 4 年提出二十一條要求，袁世凱被迫接受大部分，史稱五九國恥。這也是日後五四運動的遠因。"},
+{id:"e8Hong",ch:8,kind:"ex",era:"roc1",ord:5,label:"洪憲帝制",sub:"中華帝國・遭反對撤銷",
+ note:"民國 4 年底改國號為中華帝國，以民國 5 年為洪憲元年；因受國內外反對，被迫撤銷帝制，不久病逝。"},
+{id:"p8Jun",ch:8,kind:"point",era:"roc1",label:"軍閥割據與南北分裂",sub:"護法・廣州政府",
+ note:"袁世凱死後各地將領憑武力據地自立，爭奪北京政府控制權，以武力解決政治糾紛、大小戰禍不斷。民國 6 年段祺瑞掌控北京政府，拒絕恢復《臨時約法》並加入一次大戰；孫中山號召護法，在廣州另立政府，中國陷入南北分裂（民國 6–17 年，北京政府 vs. 廣州政府）。"},
+{id:"p8Xinwen",ch:8,kind:"point",era:"roc1",label:"新文化運動",sub:"民主與科學・白話文",
+ note:"提倡民主與科學，推動白話文運動使思想更易傳播，並引進共產主義（中共於民國 10 年成立）。"},
+{id:"p8Wusi",ch:8,kind:"point",era:"roc1",label:"五四運動",sub:"爭山東權益・各階層覺醒",
+ note:"因巴黎和會將德國在山東的權益轉給日本而爆發，爭取山東權益，帶動學生、工商各階層覺醒，新思潮加速傳播。"},
+{id:"p8Woman",ch:8,kind:"point",era:"roc1",label:"婦女解放與關注兒童",sub:"民初社會變遷",
+ note:"延續晚清的婦女解放，民初進一步推動女權，並開始關注兒童議題。"},
+
+{id:"p9Pre",ch:9,kind:"point",era:"roc2",label:"北伐前的準備",sub:"聯俄容共・黃埔軍校",
+ note:"孫中山採聯俄容共政策、建立黃埔軍校培養軍事幹部，並成立廣州國民政府，為北伐奠定基礎。"},
+{id:"p9Bei",ch:9,kind:"point",era:"roc2",label:"北伐統一",sub:"民15–17・討伐軍閥",
+ note:"目的＝討伐軍閥、完成統一；阻力＝蔣中正清黨造成國共決裂；完成＝張學良歸順，結束南北分裂。"},
+{id:"e9Qing",ch:9,kind:"ex",era:"roc2",ord:1,label:"清黨",sub:"1927・國共決裂",
+ note:"北伐期間蔣中正發動清黨，國共決裂，成為北伐的阻力。"},
+{id:"e9Zhang",ch:9,kind:"ex",era:"roc2",ord:2,label:"張學良歸順",sub:"1928・結束分裂",
+ note:"張學良宣布歸順國民政府，結束南北分裂，北伐完成。"},
+{id:"p9Ten",ch:9,kind:"point",era:"roc2",label:"十年建設",sub:"民17–26・訓政",
+ note:"體制＝實施訓政，國民黨以黨治國；財政＝收回關稅自主權、廢兩改元、發行法幣；對內先安內（剿共，迫使中共展開長征）、對外後攘外（因應日本侵略）。"},
+{id:"e9Fa",ch:9,kind:"ex",era:"roc2",ord:1,label:"廢兩改元・法幣",sub:"財政統一",
+ note:"廢除銀兩改用銀元，並發行法幣，統一全國貨幣。中國貨幣演變的最後一階段。"},
+{id:"e9Jiao",ch:9,kind:"ex",era:"roc2",ord:2,label:"剿共與長征",sub:"先安內後攘外",
+ note:"國民政府採「先安內後攘外」政策，對中共進行圍剿，中共因而展開長征。"},
+{id:"p9Jiu",ch:9,kind:"point",era:"roc2",label:"九一八事變",sub:"1931・東北淪陷",
+ note:"經濟大恐慌刺激下 1930 年代日本軍國主義抬頭。九一八事變後東北淪陷，日本扶植清廢帝溥儀成立滿洲國。"},
+{id:"e9Man",ch:9,kind:"ex",era:"roc2",label:"滿洲國",sub:"1932・日本扶植溥儀",
+ note:"日本於東北扶植清廢帝溥儀成立滿洲國，作為其侵華的據點。"},
+{id:"p9Xian",ch:9,kind:"point",era:"roc2",label:"西安事變",sub:"1936・結束剿共",
+ note:"西安事變迫使國民政府結束剿共，中共轉危為安，國共形成第二次合作、共同抗日，是抗戰前的重要轉折。"},
+{id:"p9Qi",ch:9,kind:"point",era:"roc3",label:"七七事變與前期戰況",sub:"民26–30",
+ note:"七七事變引爆全面戰火；日軍進攻上海，政府遷都重慶，並發生南京大屠殺。"},
+{id:"e9Chong",ch:9,kind:"ex",era:"roc3",ord:1,label:"遷都重慶",sub:"持久抗戰",
+ note:"日軍進攻上海後，國民政府將首都遷往重慶，以爭取戰略縱深、進行持久抗戰。"},
+{id:"e9Nan",ch:9,kind:"ex",era:"roc3",ord:2,label:"南京大屠殺",sub:"1937",
+ note:"日軍攻陷南京後對軍民進行大規模屠殺。"},
+{id:"p9Zhen",ch:9,kind:"point",era:"roc3",label:"珍珠港事變與後期戰況",sub:"民30–34",
+ note:"轉捩點＝珍珠港事變使美國參戰，中國與盟國並肩作戰，歐亞戰場合流。外交上英美等放棄在華特權，並召開開羅會議、雅爾達會議。結束＝美國投擲原子彈後日本無條件投降。"},
+{id:"e9Kai",ch:9,kind:"ex",era:"roc3",ord:1,label:"開羅會議",sub:"戰後領土安排",
+ note:"中美英三國領袖會商戰後對日處置與領土安排。"},
+{id:"e9Ya",ch:9,kind:"ex",era:"roc3",ord:2,label:"雅爾達會議",sub:"戰後國際秩序",
+ note:"盟國領袖會商戰後國際秩序安排。"},
+{id:"e9Yuan",ch:9,kind:"ex",era:"roc3",ord:3,label:"原子彈與日本投降",sub:"1945",
+ note:"美國投擲原子彈後，日本無條件投降，第二次世界大戰結束。"},
+{id:"y61",ch:10,kind:"time",era:"civil",y2:1946,label:"民35（1946）國共內戰",sub:"爭奪日軍占領區",
+ note:"中日戰爭期間中共趁機發展勢力，戰後獲蘇聯援助實力大增。日本投降後國、共為爭奪日軍占領區衝突不斷，美國派人調停失敗，內戰爆發。"},
+{id:"y62",ch:10,kind:"time",era:"civil",y2:1947,label:"民36（1947）行憲",sub:"中華民國憲法施行",
+ note:"民國 36 年頒布並施行《中華民國憲法》；民國 37 年國民政府改制為中華民國政府，並頒布《動員戡亂時期臨時條款》，凍結憲法對總統權力的限制。"},
+{id:"y63",ch:10,kind:"time",era:"prc1",y2:1949,label:"民38（1949）中共建政・政府遷臺",sub:"10月1日中華人民共和國成立",
+ note:"1949 年 10 月 1 日中華人民共和國成立、定都北京，毛澤東擔任最高領導人，採中國共產黨一黨專政。同年底中華民國政府遷臺。"},
+{id:"y64",ch:10,kind:"time",era:"prc1",y2:1950,label:"1950 韓戰",sub:"抗美援朝・臺灣轉危為安",
+ note:"1950–1953 年。二次大戰後朝鮮半島以北緯 38 度線分裂為北韓、南韓。北韓在蘇聯支持下入侵南韓，以美國為首的聯合國部隊出兵援助南韓，中共派志願軍「抗美援朝」。1953 年協議停戰、劃定停戰線對峙至今。因美國巡防臺灣海峽並提供美援，臺灣局勢轉危為安。"},
+{id:"y65",ch:10,kind:"time",era:"prc1",y2:1958,label:"1958 大躍進運動",sub:"超英趕美→大饑荒",
+ note:"毛澤東希望快速讓農、工業產量「超英趕美」。農業建「人民公社」開辦公共食堂、集體生產物資平分；工業號召「全民大煉鋼」。結果農民生產意願低落、糧產下降、各地虛報產量的「浮誇」風，煉出一堆廢鐵、農田荒蕪，引發大饑荒導致數千萬人死亡。"},
+{id:"y66",ch:10,kind:"time",era:"prc1",y2:1961,label:"1961 越戰美國出兵",sub:"北緯17度・南北越",
+ note:"1954 年越南脫離法國殖民，以北緯 17 度為界分裂為北越（共產，蘇聯與中共援助）與南越（民主）。北越入侵南越，1961 年美國出兵協助南越使戰爭規模擴大；美國國內反戰聲浪高漲，1973 年撤軍，1975 年北越占領南越（西貢），越南統一成為共產國家。"},
+{id:"y67",ch:10,kind:"time",era:"prc1",y2:1966,label:"1966 文化大革命",sub:"紅衛兵・十年浩劫",
+ note:"大躍進失敗後毛澤東為奪回權力進行政治鬥爭，口號「革命無罪，造反有理」。利用青年學生組成紅衛兵批鬥官員、知識分子與師長；號召「破四舊，立四新」破壞文物；塑造個人崇拜（《毛語錄》）。1976 年毛澤東去世後結束，被視為十年浩劫。"},
+{id:"y68",ch:10,kind:"time",era:"prc1",y2:1969,label:"1969 中蘇邊界衝突",sub:"珍寶島",
+ note:"中、蘇因東北邊界珍寶島的歸屬問題爆發軍事衝突，關係降至冰點，此後兩國在邊界駐軍加以管理。"},
+{id:"y69",ch:10,kind:"time",era:"prc2",y2:1978,label:"1978 改革開放",sub:"鄧小平・經濟特區",
+ note:"鄧小平為改善文革造成的經濟停滯，在維持共產黨專政的前提下開放自由貿易，於沿海設立經濟特區（深圳、珠海、汕頭、廈門、海南）吸引外商投資。中國經濟快速成長，但城鄉發展失衡、貧富差距擴大。"},
+{id:"y70",ch:10,kind:"time",era:"prc2",y2:1979,label:"1979 中美建交",sub:"聯美制蘇",
+ note:"1970 年代毛澤東希望改善中美關係、美國希望拉攏中共制衡蘇聯，雙方關係開始正常化，並於 1979 年建交。"},
+{id:"y71",ch:10,kind:"time",era:"prc2",y2:1989,label:"1989 六四天安門事件",sub:"要求政治改革→鎮壓",
+ note:"改革開放下人民教育程度提升，知識分子追求民主。1989 年 4 月改革派官員胡耀邦逝世引發悼念集會，學生聚集北京天安門廣場要求政治改革；6 月 4 日中共派軍隊鎮壓造成許多傷亡。中國遭西方國家經濟制裁，經濟發展短暫停滯。"},
+{id:"y72",ch:10,kind:"time",era:"prc2",y2:1997,label:"1997 香港回歸",sub:"1999 澳門・特別行政區",
+ note:"中國與英國、葡萄牙交涉取回香港（1997 年自英國）、澳門（1999 年自葡萄牙）主權，回歸後設立特別行政區加以管理。"},
+
+{id:"m10Prc",ch:10,kind:"theme",era:"prc1",label:"中共建政與早期發展",sub:"土改・大躍進・文革",
+ note:"國共內戰後中共建政，以土地改革、消滅私營、思想改造鞏固政權；大躍進追求超英趕美卻造成大饑荒；文化大革命為奪權鬥爭，成為十年浩劫。"},
+{id:"m10Open",ch:10,kind:"theme",era:"prc2",label:"改革開放與當代中國",sub:"經濟開放・政治保守",
+ note:"鄧小平推動改革開放，設經濟特區、經濟快速成長，但維持共黨專政；六四天安門事件遭西方制裁。後續取回港澳主權、加入 WTO、主辦北京奧運，仍面臨領土爭議、貧富差距、人權等挑戰。"},
+{id:"m10Cold",ch:10,kind:"theme",era:"prc1",label:"冷戰下的東亞局勢",sub:"美蘇對峙・區域衝突",
+ note:"二次大戰後形成以美國為首的民主陣營與以蘇聯為首的共產陣營，相互對峙常引發區域衝突但避免全面戰爭。東亞的具體衝突為韓戰與越戰，並牽動中美蘇三角關係。"},
+{id:"m10Org",ch:10,kind:"theme",era:"prc2",label:"東南亞國際組織",sub:"反共→區域統合",
+ note:"東南亞公約組織（1955，軍事反共，1977 解散）→ 東南亞國家協會（1967，區域統合，冷戰後轉向經貿合作）。東協是我國重要進出口市場。"},
+
+{id:"p10Civil",ch:10,kind:"point",era:"civil",label:"國共內戰",sub:"美國調停失敗・政府遷臺",
+ note:"導火線＝日本投降後國共爭奪日軍占領區。美國調停失敗，內戰爆發。後期因官員貪汙腐敗、未能解決通貨膨脹，民怨四起，局勢轉而有利中共；中華民國政府軍隊節節敗退，民國 38 年底政府遷臺。"},
+{id:"e10Con",ch:10,kind:"ex",era:"civil",ord:1,label:"中華民國憲法・動員戡亂",sub:"民36行憲・民37臨時條款",
+ note:"民國 36 年頒布並施行《中華民國憲法》；民國 37 年頒布《動員戡亂時期臨時條款》，凍結憲法對總統權力的限制。民國 80 年終止動員戡亂。"},
+{id:"p10Found",ch:10,kind:"point",era:"prc1",label:"中共建政與鞏固政權",sub:"土改・消滅私營・思想改造",
+ note:"1949 年建國、定都北京，毛澤東一黨專政。鞏固政權三手段：①土地改革－沒收地主土地重新分配給貧農，鬥清地主 ②消滅私營－民間工商企業收歸國有 ③思想改造－控制知識分子言論思想、清除反對勢力。中共早期在華北農村發展勢力，透過群眾運動批鬥地主、均分土地獲得農民支持。"},
+{id:"p10Leap",ch:10,kind:"point",era:"prc1",label:"大躍進運動",sub:"人民公社・全民大煉鋼",
+ note:"1958 年起追求「超英趕美」。農業建人民公社、開公共食堂、集體生產物資平分；工業全民大煉鋼、各地建土高爐。結果生產意願低落、浮誇風、煉出廢鐵、農田荒蕪，引發大饑荒數千萬人死亡。"},
+{id:"p10Cr",ch:10,kind:"point",era:"prc1",label:"文化大革命",sub:"1966–1976・革命無罪造反有理",
+ note:"背景＝大躍進失敗後毛澤東為奪回權力。作法＝紅衛兵批鬥、破四舊立四新、個人崇拜（毛語錄）。國內影響＝破壞傳統文物文化、社會動盪、經濟衰退、教育停頓、道德扭曲，是為十年浩劫；國際影響＝推廣共產革命，助長歐美學生運動（1968 法國學運）。"},
+{id:"e10Red",ch:10,kind:"ex",era:"prc1",ord:1,label:"紅衛兵・破四舊立四新",sub:"批鬥・破壞文物",
+ note:"利用青年學生組成紅衛兵批鬥官員、知識分子與師長。破四舊＝破除傳統思想、文化、風俗、習慣；立四新＝樹立符合共產主義價值觀的思想、文化、風俗、習慣。"},
+{id:"p10Deng",ch:10,kind:"point",era:"prc2",label:"改革開放",sub:"鄧小平・經濟特區",
+ note:"1978 年鄧小平為改善文革造成的經濟停滯，在維持共產黨專政的前提下開放自由貿易，沿海設經濟特區（深圳、珠海、汕頭、廈門、海南）吸引外商投資。影響＝經濟快速成長；衝擊＝城鄉發展失衡、貧富差距擴大。"},
+{id:"e10Sez",ch:10,kind:"ex",era:"prc2",ord:1,label:"經濟特區",sub:"深圳・珠海・汕頭・廈門・海南",
+ note:"沿海設立以吸引外商投資，深圳最具代表性。鄰近的香港、澳門回歸後則設為特別行政區。"},
+{id:"p10Tian",ch:10,kind:"point",era:"prc2",label:"六四天安門事件",sub:"1989・要求政治改革",
+ note:"改革開放下教育程度提升，知識分子追求民主。1989 年學生聚集天安門廣場要求政治改革，6 月 4 日中共派軍隊鎮壓造成許多傷亡，中國遭西方國家經濟制裁、經濟發展短暫停滯。"},
+{id:"e10Back",ch:10,kind:"ex",era:"prc2",ord:2,label:"港澳回歸・加入WTO",sub:"特別行政區・國際參與",
+ note:"與英國、葡萄牙交涉取回香港（1997）、澳門（1999）主權，設特別行政區管理；並積極參與國際事務，如加入 WTO、主辦北京奧運。挑戰＝領土爭議、貧富差距、沿海與內陸發展不均、人權問題。"},
+{id:"p10War",ch:10,kind:"point",era:"prc1",label:"韓戰",sub:"1950–1953・抗美援朝",
+ note:"朝鮮半島以北緯 38 度線分裂。北韓在蘇聯支持下入侵南韓，以美國為首的聯合國部隊援助南韓，中共派志願軍抗美援朝。1953 年停戰、南北韓對峙至今。影響臺灣：美國巡防臺灣海峽、提供美援，臺灣局勢轉危為安。"},
+{id:"p10Viet",ch:10,kind:"point",era:"prc1",label:"越戰",sub:"1961–1975・北緯17度",
+ note:"1954 年越南脫離法國殖民後以北緯 17 度分裂為北越（共產）南越（民主）。北越入侵南越，1961 年美國出兵，戰爭擴大；美國反戰聲浪高漲，1973 年撤軍；1975 年北越占領西貢，越南統一成為共產國家。"},
+{id:"p10Tri",ch:10,kind:"point",era:"prc1",label:"中美蘇三角關係",sub:"友好→交惡→聯美制蘇→正常化",
+ note:"1950 年代初中蘇友好（蘇聯提供資金技術人才）→ 1950 年代末起中蘇交惡（毛澤東認為蘇聯企圖控制中國內政外交）→ 1969 年珍寶島邊界衝突關係降至冰點 → 1970 年代中美聯合制蘇，1979 年建交 → 1980 年代後鄧小平推動改革開放，中蘇恢復正常往來。"},
+{id:"p10Seato",ch:10,kind:"point",era:"prc1",label:"東南亞公約組織",sub:"1955・軍事反共・1977解散",
+ note:"1954 年南北越分治後，美國為反制共產勢力在東南亞擴張，聯合英、美成立（SEATO）。目的＝透過軍事聯盟將東南亞納入亞太圍堵體系。成員共 8 個，泰國、菲律賓是其中唯二的東南亞國家。因意見與利益分歧，1977 年解散。美國另與未加入的東亞國家簽約，如與我國簽《中美共同防禦條約》。"},
+{id:"p10Asean",ch:10,kind:"point",era:"prc2",label:"東南亞國家協會",sub:"1967・區域統合",
+ note:"擺脫殖民獨立的東南亞各國為加強合作、維護區域政治社會穩定而成立。創始國＝印尼、泰國、新加坡、菲律賓、馬來西亞；目前共 11 個會員國。冷戰後轉型注重經貿合作與互惠，吸引各國投資並與其他經濟體合作（RCEP）。東協地區是我國重要進出口市場。"}
+];
+
+/* 邊：[起, 迄, 標籤, 虛線?, 因果箭頭?] */
+const E = [
+/* ---------- 單元 5 ---------- */
+["m5Feng","p5Shang","封建初建"],
+["m5Feng","p5Zhou","封建完備"],
+["m5Feng","p5East","封建瓦解"],
+["m5Feng","p5Qin","郡縣確立"],
+["p5Zhou","e5Zong","維繫①"],
+["p5Zhou","e5Li","維繫②"],
+["p5Zhou","e5Class","社會階級"],
+["p5East","e5Shang2","變法代表・富國強兵",0,1],
+["p5East","e5Bu","用人唯才"],
+["p5East","e5Si","知識普及"],
+["e5Shang2","e5Hu","編列戶籍"],
+["p5Qin","e5Huang","①皇帝制度"],
+["p5Qin","e5Jun","②廢封建行郡縣→中央集權",0,1],
+["p5Qin","e5Tong","③統一文物"],
+["p5Qin","e5QinFall","濫用民力"],
+["y01","p5Shang","",1],
+["y02","p5Zhou","",1],
+["y03","p5East","王室東遷",0,1],
+["y04","e5Shang2","",1],
+["y05","p5Qin","",1],
+["e5Shang2","p5Qin","奠定統一基礎",0,1],
+
+["m5Xuan","p5Cha","漢"],
+["m5Xuan","p5Jiu","曹魏"],
+["m5Xuan","p5Ke","隋唐～清末"],
+["p5Cha","e5Shi","經學傳家、累世當官",0,1],
+["p5Jiu","e5Shang3","弊端"],
+["y07","p5Cha","",1],
+["y09","p5Jiu","",1],
+["y12","p5Ke","",1],
+["e5Shi","p5Jiu","重家世",0,1],
+["p5Jiu","p5Ke","為抑制世族",0,1],
+["e5Bu","p5Cha","用人唯才的延續",1],
+
+["m5Min","p5Xiong","秦漢"],
+["m5Min","p5Yong","魏晉南北朝"],
+["m5Min","p5Bei","北魏漢化"],
+["m5Min","p5Tian","隋唐"],
+["p5Xiong","e5Zhang","經營西域"],
+["e5Zhang","e5Silk","開通絲路",0,1],
+["p5Tian","e5Hu2","胡風盛行"],
+["y06","e5Zhang","",1],
+["y10","p5Yong","",1],
+["y11","p5Bei","",1],
+["y13","p5Tian","",1],
+["p5Yong","p5Bei","胡人建國後求融合",0,1],
+
+["m5Wen","p5Fo","外來宗教"],
+["m5Wen","e5Yi","伊斯蘭教"],
+["m5Wen","p5Dong","唐文化外傳"],
+["p5Fo","e5Ku","石窟藝術"],
+["p5Fo","e5Xuan2","中國化"],
+["p5Dong","e5Xin","新羅"],
+["p5Dong","e5Ri","日本"],
+["p5Dong","e5Tubo","吐蕃"],
+["p5Dong","e5Zhi","大食"],
+["y08","p5Fo","",1],
+["y14","e5Tubo","",1],
+["y15","e5Zhi","",1],
+["e5Silk","p5Fo","佛教東傳",0,1],
+["p5Yong","p5Fo","戰亂→精神寄託",0,1],
+["p5Ke","e5Ri","律令制度外傳",1],
+
+/* ---------- 單元 6 ---------- */
+["m6Liao","p6Qidan","契丹"],
+["m6Liao","p6Bei","北宋"],
+["m6Liao","p6Jin","女真"],
+["m6Liao","p6Nan","南宋"],
+["p6Qidan","e6Yan","取得"],
+["p6Bei","e6Chan","軍力貧弱→議和",0,1],
+["p6Jin","e6Jing","轉攻北宋",0,1],
+["y16","p6Qidan","唐亡後崛起",0,1],
+["y17","p6Qidan","",1],
+["y18","p6Bei","",1],
+["y19","e6Chan","",1],
+["y20","e6Jing","",1],
+["e6Yan","p6Bei","北方屏障盡失",0,1],
+["p6Bei","p6Jin","聯金滅遼",0,1],
+["e6Jing","p6Nan","宋室南遷",0,1],
+
+["m6Yuan","p6Meng","建國與西征"],
+["m6Yuan","p6YuanD","建元統一"],
+["p6Meng","e6Xi","三次西征→橫跨歐亞",0,1],
+["p6YuanD","e6Zhong","統治政策"],
+["y21","p6Meng","",1],
+["y22","e6Xi","",1],
+["y23","p6YuanD","",1],
+["p6Meng","p6Nan","聯南宋滅金",1],
+["p6YuanD","p6Nan","滅南宋",0,1],
+
+["m6Ming","p6MingJ","明的建立"],
+["m6Ming","e6Qian","遷都防蒙古"],
+["m6Ming","e6Liu","明的滅亡"],
+["m6Ming","p6Qing","清的入關與盛世"],
+["y24","p6MingJ","",1],
+["y27","p6Qing","女真建大清",1],
+["y28","e6Liu","",1],
+["p6YuanD","p6MingJ","元末民變→驅逐蒙古",0,1],
+["e6Liu","p6Qing","明亡→清兵入關",0,1],
+
+["m6Eco","p6Nong","農業"],
+["m6Eco","p6Shi","國際貿易"],
+["m6Eco","p6Li","學術"],
+["m6Eco","p6San","科技"],
+["p6Shi","e6Fang","國內商業"],
+["p6Shi","e6Qing2","汴京榮景"],
+["p6Shi","e6Zhi2","貨幣"],
+["p6Nong","e6Fang","人口成長→城市繁盛",0,1],
+["e6Xi","p6Shi","打通東西陸路",0,1],
+["p6San","e6Xi","蒙古西征西傳",1],
+
+["m6Trade","p6Chao","朝貢體制"],
+["m6Trade","p6Hai","海禁政策"],
+["m6Trade","p6Yin","全球網絡"],
+["m6Trade","e6Zhen","專業市鎮"],
+["p6Chao","e6Zheng","鄭和下西洋→朝貢顛峰",0,1],
+["y25","e6Zheng","",1],
+["p6Hai","p6Yin","走私→海商轉向殖民者",0,1],
+["p6Yin","e6Zhen","瓷器外銷",1],
+
+["m6West","p6Li2","耶穌會東來"],
+["m6West","e6Suo","日本鎖國"],
+["p6Li2","e6Ji","西學輸入"],
+["p6Li2","e6Hot","中學西傳"],
+["p6Li2","e6Rite","爭議"],
+["y26","p6Li2","",1],
+["y29","e6Rite","雍正禁教",1],
+["p6Yin","p6Li2","新航路帶來傳教士",0,1],
+
+/* ---------- 單元 7 ---------- */
+["m7Chong","p7Guang","通商限制"],
+["m7Chong","p7Opium","鴉片戰爭"],
+["m7Chong","p7Ying","英法聯軍"],
+["m7Chong","p7Hei","衝擊日本"],
+["p7Opium","e7Nan","戰敗簽約",0,1],
+["p7Opium","e7Priv","續約特權"],
+["y30","p7Guang","",1],
+["y31","p7Opium","",1],
+["y32","e7Nan","",1],
+["y33","p7Hei","",1],
+["y34","p7Ying","",1],
+["p6Hai","p7Guang","海禁的延續",1],
+["p7Guang","p7Opium","貿易衝突升高",0,1],
+["e7Nan","e7Priv","續約",0,1],
+["p7Ying","p7Ziqiang","見識船堅炮利",0,1],
+["p7Hei","p7Meiji","被迫開國→維新",0,1],
+
+["m7Reform","p7Ziqiang","器物"],
+["m7Reform","p7Wu","制度"],
+["m7Reform","p7Geng","新政"],
+["m7Reform","p7Lixian","立憲"],
+["p7Ziqiang","e7Zong","外交"],
+["p7Ziqiang","e7Bei","軍事"],
+["p7Wu","e7Jing","僅存"],
+["p7Ba","e7Xin","簽辛丑和約",0,1],
+["y35","p7Ziqiang","",1],
+["y36","p7Meiji","",1],
+["y37","p7Ziqiang","清法戰爭期間",1],
+["y38","p7Jia","",1],
+["y39","p7Wu","",1],
+["y40","p7Ba","",1],
+["y41","p7Geng","",1],
+["y42","p7RiE","",1],
+["y43","p7Lixian","",1],
+["y44","p7Lixian","皇族內閣",1],
+["p7Meiji","p7Jia","向外擴張",0,1],
+["p7Jia","e7Ma","戰敗簽約",0,1],
+["e7Ma","e7Gua","列強瓜分",0,1],
+["p7Jia","p7Wu","刺激制度改革",0,1],
+["p7Ziqiang","p7Jia","甲午戰敗證明成效有限",0,1],
+["e7Bei","p7Jia","黃海海戰全軍覆沒",1],
+["p7Ba","p7Geng","刺激新政",0,1],
+["p7Geng","e7Jing","廢科舉→新式教育",1],
+["p7RiE","p7Lixian","立憲勝專制",0,1],
+["p7Lixian","p8Xin","皇族內閣→轉支持革命",0,1],
+
+["m7Soc","p7City","城市"],
+["m7Soc","e7Media","媒體"],
+["m7Soc","p7Woman","婦女"],
+["e7Priv","p7City","租界→西方文明窗口",0,1],
+["e7Media","p7Woman","新思潮傳播",0,1],
+["p7Woman","p8Woman","延續到民初",1],
+
+/* ---------- 單元 8 ---------- */
+["m8Found","p8Xin","辛亥革命"],
+["m8Found","e8Found","民國建立"],
+["m8Yuan","p8Yuan","袁世凱"],
+["m8Yuan","p8Jun","軍閥"],
+["p8Yuan","e8Lin","制度制衡"],
+["p8Yuan","e8Song","二次革命起因"],
+["p8Yuan","e8Er","討袁"],
+["p8Yuan","e8Er2","外交屈辱"],
+["p8Yuan","e8Hong","稱帝"],
+["y44","p8Xin","武昌起事",1],
+["y45","e8Found","",1],
+["y46","e8Er","",1],
+["y47","e8Er2","",1],
+["y48","e8Hong","",1],
+["y49","p8Jun","南北分裂",1],
+["p8Xin","e8Found","南方各省獨立",0,1],
+["e8Found","p8Yuan","南北議和",0,1],
+["e8Song","e8Er","輿論指袁為主謀",0,1],
+["e8Er","e8Hong","擴權→稱帝",0,1],
+["e8Hong","p8Jun","袁死後割據",0,1],
+
+["m8New","p8Xinwen","新文化運動"],
+["m8New","p8Wusi","五四運動"],
+["m8New","p8Woman","社會變遷"],
+["y47","p8Xinwen","",1],
+["y50","p8Wusi","",1],
+["y51","p8Xinwen","引進共產主義",1],
+["e8Er2","p8Wusi","山東權益",0,1],
+["p8Xinwen","p8Wusi","思想啟蒙",0,1],
+
+/* ---------- 單元 9 ---------- */
+["m9Bei","p9Pre","北伐前"],
+["m9Bei","p9Bei","北伐統一"],
+["m9Bei","p9Ten","十年建設"],
+["p9Bei","e9Qing","阻力"],
+["p9Bei","e9Zhang","完成"],
+["p9Ten","e9Fa","財政"],
+["p9Ten","e9Jiao","先安內"],
+["y52","p9Bei","",1],
+["y53","e9Qing","",1],
+["y54","e9Zhang","",1],
+["p8Jun","p9Bei","討伐軍閥",0,1],
+["p9Pre","p9Bei","黃埔軍校為基礎",0,1],
+["e9Zhang","p9Ten","統一後推動建設",0,1],
+["e9Jiao","p9Xian","剿共→西安事變",0,1],
+
+["m9War","p9Jiu","日本擴張"],
+["m9War","p9Xian","轉折"],
+["m9War","p9Qi","前期戰況"],
+["m9War","p9Zhen","後期戰況"],
+["p9Jiu","e9Man","東北淪陷→扶植傀儡",0,1],
+["p9Qi","e9Chong","遷都"],
+["p9Qi","e9Nan","暴行"],
+["p9Zhen","e9Kai","外交"],
+["p9Zhen","e9Ya","外交"],
+["p9Zhen","e9Yuan","美國參戰→日本投降",0,1],
+["y55","p9Jiu","",1],
+["y56","e9Man","",1],
+["y57","p9Xian","",1],
+["y58","p9Qi","",1],
+["y59","p9Zhen","",1],
+["y60","e9Yuan","",1],
+["p9Xian","p9Qi","國共合作→全面抗戰",0,1],
+["p9Qi","p9Zhen","戰事擴大",0,1],
+
+/* ---------- 跨冊對照（虛線） ---------- */
+["p7Meiji","p7Ziqiang","同期改革對照",1],
+["p6Hai","p6Chao","海禁 vs 朝貢",1],
+["e6Jing","p5Yong","亡國模式對照",1],
+["p6Jin","p6Qing","女真兩政權",1],
+["e5Jun","e5Huang","秦制兩支柱",1],
+["p5Ke","p7Geng","科舉的起與廢",1],
+["m10Prc","p10Civil","國共內戰"],
+["m10Prc","p10Found","建政與鞏固"],
+["m10Prc","p10Leap","大躍進"],
+["m10Prc","p10Cr","文化大革命"],
+["p10Civil","e10Con","內政"],
+["p10Cr","e10Red","作法"],
+["y61","p10Civil","",1],
+["y62","e10Con","",1],
+["y63","p10Found","",1],
+["y65","p10Leap","",1],
+["y67","p10Cr","",1],
+["p10Civil","p10Found","中共勝出、政府遷臺",0,1],
+["p10Found","p10Leap","鞏固後推動生產躍進",0,1],
+["p10Leap","p10Cr","大躍進失敗→奪權鬥爭",0,1],
+
+["m10Open","p10Deng","改革開放"],
+["m10Open","p10Tian","六四"],
+["p10Deng","e10Sez","措施"],
+["p10Tian","e10Back","後續發展"],
+["y69","p10Deng","",1],
+["y71","p10Tian","",1],
+["y72","e10Back","港澳回歸",1],
+["p10Cr","p10Deng","文革經濟停滯→改革開放",0,1],
+["p10Deng","p10Tian","教育提升→追求民主",0,1],
+["p10Tian","e10Back","遭制裁後續參與國際",0,1],
+
+["m10Cold","p10War","韓戰"],
+["m10Cold","p10Viet","越戰"],
+["m10Cold","p10Tri","中美蘇關係"],
+["y64","p10War","",1],
+["y66","p10Viet","",1],
+["y68","p10Tri","中蘇邊界衝突",1],
+["y70","p10Tri","中美建交",1],
+["p10War","p10Tri","抗美援朝→中蘇友好",0,1],
+["p10Tri","p10Deng","中蘇恢復往來",1],
+
+["m10Org","p10Seato","反共軍事聯盟"],
+["m10Org","p10Asean","區域統合"],
+["p10Viet","p10Seato","南北越分治→美國反制",0,1],
+["p10Seato","p10Asean","解散後轉向區域統合",1],
+
+/* 跨單元銜接 */
+["e9Yuan","p10Civil","戰後爭奪占領區",0,1],
+["p9Bei","p10Civil","國共關係演進",1],
+["e9Jiao","p10Civil","剿共→內戰",1],
+["p8Xinwen","p10Cr","同樣批判儒家傳統",1],
+["p8Wusi","p10Tian","學生運動對照",1]
+];
+
+const TABLES = {
+c1:{title:"封建制度 vs 郡縣制度",html:`<table>
+<tr><th>項目</th><th>封建制度</th><th>郡縣制度</th></tr>
+<tr><th>盛行時代</th><td><span class="hl">西周</span></td><td><span class="hl">秦</span></td></tr>
+<tr><th>權力性質</th><td><span class="hl">地方分權</span>（周天子是名義上共主）</td><td><span class="hl">中央集權</span>（皇帝是權力中心）</td></tr>
+<tr><th>地方治理</th><td>間接統治，諸侯國具地方獨立性</td><td>直接統治，地方絕對服從中央</td></tr>
+<tr><th>官吏來源</th><td>諸侯官位<span class="hb">世襲</span>，各擁封地</td><td>由<span class="hb">皇帝</span>直接派任，非世襲</td></tr>
+<tr><th>缺點</th><td>易導致諸侯擁兵自重</td><td>地方自主性小、宗室缺乏屏障</td></tr>
+<tr><th colspan="3" style="text-align:left">演變：商（封建初建）→ 西周（封建完備，加<span class="hl">宗法、禮樂</span>）→ 東周（封建瓦解，出現<span class="hl">郡縣</span>雛形）→ 秦（郡縣確立）→ 漢以後沿用</th></tr>
+</table>`},
+
+c2:{title:"中國歷代選才制度",html:`<table>
+<tr><th>時期</th><th>制度</th><th>依據</th><th>影響</th></tr>
+<tr><th><span class="hb">西周</span></th><td>封建世襲</td><td><span class="hl">血緣</span></td><td>只有貴族可受教育，官位世襲，階級嚴明</td></tr>
+<tr><th><span class="hb">東周</span></th><td>用人唯才</td><td><span class="hl">才能</span></td><td><span class="hl">布衣卿相</span>，貴族沒落、平民崛起</td></tr>
+<tr><th><span class="hb">漢</span></th><td><span class="hl">察舉</span>（孝廉）<br><span class="hl">經學取士</span>（太學）</td><td>品德<br>儒家經學</td><td>熟讀經學成為任官途徑 → 形成<span class="hl">世族</span>（經學傳家、累世當官）；儒家成為文化主流</td></tr>
+<tr><th><span class="hb">曹魏</span></th><td><span class="hl">九品官人之法</span></td><td><span class="hl">家世</span>（最看重）</td><td>世族掌握政治權力與經濟特權，勢力鼎盛 → 「<span class="hl">上品無寒門，下品無世族</span>」</td></tr>
+<tr><th><span class="hb">隋唐～清末</span></th><td><span class="hl">科舉制度</span></td><td>分科<span class="hl">考試</span></td><td>世族沒落退出政治舞臺；平民入仕機會增加，<span class="hl">促進社會階層流動</span>；<span class="hb">庚子後新政</span>時廢除</td></tr>
+<tr><th colspan="4" style="text-align:left"><b>世族興衰</b>：漢末<span class="hl">形成</span>（經學傳家）→ 魏晉南北朝<span class="hl">鼎盛</span>（九品官人法重家世）→ 隋唐<span class="hl">沒落</span>（科舉）</th></tr>
+</table>`},
+
+c3:{title:"歷代與草原民族的互動",html:`<table>
+<tr><th>中國政權</th><th>草原民族</th><th>互動</th></tr>
+<tr><th>西周</th><td><span class="hb">犬戎</span></td><td>入侵首都鎬，導致周王室東遷</td></tr>
+<tr><th>東周</th><td><span class="hb">匈奴</span></td><td>黃河流域各國修築城牆防禦</td></tr>
+<tr><th>秦</th><td>匈奴</td><td>連結各國城牆為<span class="hl">長城</span>，派兵討伐 → 長城成為<span class="hl">農牧文化分界線</span></td></tr>
+<tr><th>漢</th><td>匈奴</td><td>漢初<span class="hb">和親</span>；武帝出兵征伐，派<span class="hl">張騫通西域</span> → 開啟<span class="hl">絲路</span></td></tr>
+<tr><th>西晉</th><td><span class="hb">五胡</span>（匈奴鮮卑羯氐羌）</td><td><span class="hl">永嘉之禍</span>，胡人攻陷洛陽，晉室南遷</td></tr>
+<tr><th>北魏</th><td><span class="hb">鮮卑</span></td><td><span class="hl">孝文帝漢化政策</span>，加速胡漢交流</td></tr>
+<tr><th>唐</th><td><span class="hb">突厥</span></td><td>太宗滅東突厥，獲<span class="hl">天可汗</span>稱號</td></tr>
+<tr><th>北宋</th><td><span class="hb">契丹</span>（遼）</td><td><span class="hl">澶淵之盟</span>，付歲幣、兄弟相稱（首度<span class="hl">對等外交</span>）</td></tr>
+<tr><th>北宋末</th><td><span class="hb">女真</span>（金）</td><td>聯金滅遼 → <span class="hl">靖康之禍</span>，北宋亡</td></tr>
+<tr><th>南宋</th><td><span class="hb">蒙古</span></td><td>聯蒙滅金 → 元世祖滅南宋</td></tr>
+<tr><th>明</th><td>蒙古・<span class="hb">女真</span></td><td>成祖遷都北京、修長城防蒙古；女真改稱滿洲建大清</td></tr>
+</table>`},
+
+c4:{title:"中西文化交流四階段",html:`<table>
+<tr><th>時期</th><th>7～8 世紀</th><th>13 世紀</th><th>16 世紀中期後</th><th>19 世紀中期起</th></tr>
+<tr><th>關鍵</th><td><span class="hl">天可汗體系</span></td><td><span class="hl">蒙古西征</span></td><td><span class="hl">耶穌會東來</span></td><td>列強設立<span class="hl">租界</span></td></tr>
+<tr><th>傳入中國</th><td><span class="hb">伊斯蘭教</span>、胡風、佛教</td><td>伊斯蘭文化（天文曆法、數學、醫學）</td><td>西方知識（曆法、數學、地理、火炮）</td><td><span class="hb">西方思潮</span></td></tr>
+<tr><th>傳出中國</th><td><span class="hb">造紙術</span>（怛羅斯之役）、<span class="hl">唐文化</span>（日本、新羅）</td><td><span class="hb">火藥、印刷術</span>（蒙古西征）、<span class="hb">指南針</span>（阿拉伯人）</td><td>儒家經典、園林建築、瓷器 → 歐洲<span class="hl">中國熱</span></td><td>—</td></tr>
+<tr><th colspan="5" style="text-align:left">阿拉伯人的角色：<span class="hb">傳入</span>伊斯蘭教（唐）；<span class="hb">傳出</span>造紙術（唐）、指南針（宋）</th></tr>
+</table>`},
+
+c5:{title:"宋元多民族政權比較",html:`<table>
+<tr><th>民族</th><th>政權</th><th>發展策略</th><th>外交策略</th><th>滅亡</th></tr>
+<tr><th>漢人</th><td><span class="hl">北宋</span></td><td>文人政治、<span class="hb">強幹弱枝</span>；付<span class="hb">歲幣</span>換和平</td><td>宋遼<span class="hl">澶淵之盟</span>、<span class="hb">聯金滅遼</span></td><td><span class="hl">靖康之禍</span>，亡於金</td></tr>
+<tr><th>漢人</th><td><span class="hl">南宋</span></td><td>偏安<span class="hb">臨安</span>，岳飛抗金</td><td><span class="hb">聯蒙古滅金</span></td><td>亡於元</td></tr>
+<tr><th>契丹</th><td>遼</td><td>取得<span class="hl">燕雲十六州</span></td><td>宋遼澶淵之盟</td><td>亡於金</td></tr>
+<tr><th>女真</th><td>金</td><td>仿效漢人制度</td><td>聯北宋滅遼</td><td>亡於蒙古</td></tr>
+<tr><th>蒙古</th><td>蒙古國</td><td><span class="hl">三次西征</span>，建四大汗國</td><td>滅西夏、聯南宋滅金</td><td>分裂為元與四大汗國</td></tr>
+<tr><th>蒙古</th><td>元</td><td><span class="hl">四等種族差別待遇</span></td><td>軍事征服</td><td>遭明驅逐，退居長城以北</td></tr>
+<tr><th colspan="5" style="text-align:left"><b>首都</b>：北宋<span class="hb">汴京</span>（開封）｜南宋<span class="hb">臨安</span>（杭州）｜元<span class="hb">大都</span>（北京）｜明<span class="hb">應天→北京</span>｜清北京<br>
+<b>亡國模式對照</b>：<span class="hl">永嘉之禍</span>（西晉，胡人陷洛陽）／<span class="hl">靖康之禍</span>（北宋，金陷汴京）——都造成王朝南遷</th></tr>
+</table>`},
+
+c6:{title:"明清限制對外貿易政策",html:`<table>
+<tr><th>時期</th><th>施行背景</th><th>影響</th><th>解除</th></tr>
+<tr><th>明初</th><td>防範<span class="hl">倭寇</span></td><td>民間改以<span class="hb">走私</span>維生，形成武裝海商集團</td><td>明中期後海禁趨緩</td></tr>
+<tr><th>清初</th><td>封鎖<span class="hl">鄭氏</span>政權<br>（片板不許下海，粒貨不許越疆）</td><td>鄭氏採行走私貿易</td><td>攻下臺灣後解除</td></tr>
+<tr><th>清乾隆</th><td>集中管理外商</td><td><span class="hl">廣州一口通商</span>、公行制度；中英爆發貿易衝突</td><td>《<span class="hl">南京條約</span>》結束閉關自守</td></tr>
+<tr><th colspan="4" style="text-align:left"><b>外來作物</b>：北宋自<span class="hb">占城</span>引進<span class="hl">早熟稻</span>→稻米大增；明自<span class="hb">美洲</span>引進<span class="hl">番薯、玉米、馬鈴薯</span>→緩和糧食不足<br>
+<b>貨幣演變</b>：秦統一銅錢 → 宋元紙幣（北宋<span class="hb">交子</span>、南宋<span class="hb">會子</span>、元<span class="hb">寶鈔</span>）→ 明清<span class="hl">白銀與銅錢並用</span> → 中華民國<span class="hb">法幣</span></th></tr>
+</table>`},
+
+c7:{title:"晚清對外戰爭比較　★★核心",html:`<table>
+<tr><th>戰爭</th><th>時間</th><th>背景／導火線</th><th>條約</th><th>割地</th><th>影響</th></tr>
+<tr><th><span class="hl">鴉片戰爭</span></th><td>1840</td><td><span class="hb">林則徐</span>查禁鴉片</td><td>《<span class="hl">南京條約</span>》及續約</td><td><span class="hb">香港</span></td><td>1. 打破<span class="hl">天朝體制</span>、結束閉關自守<br>2. 開啟百年<span class="hl">不平等條約</span>束縛<br>3. 喪失關稅、司法自主權</td></tr>
+<tr><th><span class="hl">英法聯軍</span></th><td>1857–1860</td><td>英欲<span class="hb">修約</span>全面通商被拒</td><td>《<span class="hl">天津條約</span>》</td><td><span class="hb">九龍司</span></td><td>1. 增開口岸（含<span class="hb">臺灣</span>），勢力由沿海<span class="hl">深入內地</span><br>2. 刺激<span class="hl">自強運動</span></td></tr>
+<tr><th><span class="hl">清法戰爭</span></th><td>1884</td><td><span class="hb">越南</span>問題</td><td>—</td><td>—</td><td>1. <span class="hl">臺灣建省</span><br>2. 越南成為法國殖民地</td></tr>
+<tr><th><span class="hl">甲午戰爭</span></th><td>1894–1895</td><td><span class="hb">朝鮮</span>問題</td><td>《<span class="hl">馬關條約</span>》</td><td><span class="hb">臺、澎</span></td><td>1. 承認朝鮮獨立<br>2. 外人可在<span class="hl">通商口岸設廠</span><br>3. 引發列強<span class="hl">瓜分風潮</span><br>4. 刺激<span class="hl">戊戌變法</span>與革命</td></tr>
+<tr><th><span class="hl">八國聯軍</span></th><td>1900</td><td><span class="hb">義和團</span>事件（扶清滅洋）</td><td>《<span class="hl">辛丑和約</span>》</td><td>—</td><td>1. 國防與財務重大損失、外人駐兵北京<br>2. 促成<span class="hl">庚子後新政</span></td></tr>
+<tr><th><span class="hl">日俄戰爭</span></th><td>1904–1905</td><td>爭奪中國<span class="hb">東北</span>權益</td><td>—</td><td>—</td><td>日本戰勝 → 「<span class="hl">立憲勝專制</span>」→ 刺激<span class="hl">立憲運動</span></td></tr>
+</table>`},
+
+c8:{title:"清末改革運動比較　★★核心",html:`<table>
+<tr><th>項目</th><th>自強運動</th><th>戊戌變法</th><th>庚子後新政</th><th>立憲運動</th></tr>
+<tr><th>開始時間</th><td>1861</td><td>1898</td><td>1901</td><td>1906</td></tr>
+<tr><th>主導者</th><td><span class="hb">地方官員</span>（奕訢、曾國藩、李鴻章）</td><td><span class="hb">光緒、康有為、梁啟超</span></td><td><span class="hb">慈禧太后</span></td><td><span class="hb">立憲派</span></td></tr>
+<tr><th>外力刺激</th><td><span class="hl">英法聯軍</span></td><td><span class="hl">甲午戰爭</span></td><td><span class="hl">八國聯軍</span></td><td><span class="hl">日俄戰爭</span></td></tr>
+<tr><th>改革層面</th><td><span class="hl">器物</span></td><td><span class="hl">制度</span></td><td>制度</td><td>制度</td></tr>
+<tr><th>主要內容</th><td><span class="hb">總理各國事務衙門</span>、北洋艦隊、鐵路、留學生</td><td>精簡政府組織、設<span class="hb">京師大學堂</span></td><td><span class="hb">廢除科舉</span>、新式教育、編練新軍</td><td>下詔預備立憲、成立<span class="hb">責任內閣</span></td></tr>
+<tr><th>結果</th><td>甲午戰敗，成效有限</td><td>慈禧發動<span class="hl">戊戌政變</span>，僅 103 天（百日維新）</td><td>—</td><td>出現<span class="hl">皇族內閣</span>，立憲派改支持革命</td></tr>
+</table>`},
+
+c9:{title:"自強運動 vs 明治維新",html:`<table>
+<tr><th>項目</th><th>自強運動（中國）</th><th>明治維新（日本）</th></tr>
+<tr><th>時間</th><td>1861 年起</td><td>1868 年起</td></tr>
+<tr><th>西力壓迫</th><td><span class="hl">英法聯軍</span>戰敗</td><td><span class="hl">美國叩關</span>（黑船事件）</td></tr>
+<tr><th>主導者</th><td>恭親王<span class="hb">奕訢</span>、曾國藩、<span class="hb">李鴻章</span></td><td><span class="hb">明治天皇</span></td></tr>
+<tr><th>改革層面</th><td><span class="hl">器物</span>層面（軍事、技術）</td><td><span class="hl">制度</span>層面（全面仿效西方）</td></tr>
+<tr><th>結果</th><td><span class="hl">失敗</span>——甲午戰敗</td><td><span class="hl">成功</span>——甲午、日俄戰爭皆勝，成為<span class="hb">亞洲第一個現代化國家</span></td></tr>
+<tr><th colspan="3" style="text-align:left"><b>通商限制對照</b>：中國＝雍正禁教→乾隆<span class="hb">廣州</span>一口通商，英國叩關；日本＝江戶幕府<span class="hb">鎖國</span>，僅中、荷於<span class="hb">長崎</span>貿易，美國叩關<br>
+<b>唐化 vs 西化</b>：<span class="hl">大化革新</span>（7 世紀中期・唐化運動）／<span class="hl">明治維新</span>（19 世紀中期・西化改革）</th></tr>
+</table>`},
+
+c10:{title:"列強在華勢力範圍（甲午後瓜分風潮）",html:`<table>
+<tr><th>國家</th><th>租借港灣</th><th>勢力範圍</th></tr>
+<tr><th><span class="hb">俄國</span></th><td>旅順、大連</td><td>長城以北、<span class="hl">東北</span></td></tr>
+<tr><th><span class="hb">德國</span></th><td>膠州灣</td><td><span class="hl">山東</span></td></tr>
+<tr><th><span class="hb">英國</span></th><td>威海衛、新界</td><td>長江流域</td></tr>
+<tr><th><span class="hb">日本</span></th><td>無</td><td>福建</td></tr>
+<tr><th><span class="hb">法國</span></th><td>廣州灣</td><td>西南地區</td></tr>
+<tr><th colspan="3" style="text-align:left"><b>租借港灣</b>期滿可收回 → 香港 1997 回歸源自「<span class="hl">新界</span>」租期屆滿（1898–1997）<br>
+<b>勢力範圍</b>＝在該地區享有獨占權利 → 一戰時日本強占德國在<span class="hl">山東</span>的勢力範圍，逼中國簽「<span class="hl">二十一條要求</span>」，成為<span class="hl">五四運動</span>的遠因<br>
+<b>門戶開放政策</b>：美國無利可圖，要求列強開放勢力範圍供各國貿易，獲英國支持</th></tr>
+</table>`},
+
+c11:{title:"民國初年政局演變",html:`<table>
+<tr><th>時間</th><th>事件</th><th>內容</th></tr>
+<tr><th>民元（1912）</th><td><span class="hl">民國建立</span></td><td>臨時政府於<span class="hb">南京</span>成立，<span class="hb">孫中山</span>任臨時大總統；袁世凱勸溥儀退位換取總統職位，遷都<span class="hb">北京</span>；通過《<span class="hl">臨時約法</span>》改採<span class="hl">內閣制</span></td></tr>
+<tr><th>民 2（1913）</th><td><span class="hl">二次革命</span></td><td><span class="hb">宋教仁</span>遇刺 → 國民黨討袁失敗 → 袁就任正式大總統、解散國會、廢《臨時約法》</td></tr>
+<tr><th>民 4（1915）</th><td><span class="hl">二十一條</span></td><td>一戰時日本進占<span class="hb">山東</span>，提出二十一條要求，袁被迫接受大部分（<span class="hl">五九國恥</span>）</td></tr>
+<tr><th>民 5（1916）</th><td><span class="hl">洪憲帝制</span></td><td>改國號中華帝國 → 國內外反對 → 撤銷帝制、不久病逝 → <span class="hl">軍閥割據</span></td></tr>
+<tr><th>民 6（1917）</th><td><span class="hl">南北分裂</span></td><td><span class="hb">段祺瑞</span>拒恢復《臨時約法》→ 孫中山號召<span class="hb">護法</span>，於<span class="hb">廣州</span>另立政府（民 6–17 年）</td></tr>
+<tr><th>民 8（1919）</th><td><span class="hl">五四運動</span></td><td>爭取<span class="hb">山東權益</span>，各階層覺醒；新文化運動提倡<span class="hl">民主與科學</span>、<span class="hl">白話文</span>，引進共產主義（民 10 中共成立）</td></tr>
+</table>`},
+
+c12:{title:"北伐、十年建設與中日戰爭",html:`<table>
+<tr><th colspan="3" class="grp">北伐與十年建設</th></tr>
+<tr><th style="width:16%">北伐前</th><td colspan="2">孫中山<span class="hl">聯俄容共</span>、建立<span class="hl">黃埔軍校</span>、成立廣州國民政府</td></tr>
+<tr><th>北伐統一<br>（民 15–17）</th><td colspan="2">目的＝討伐軍閥、完成統一｜阻力＝蔣中正<span class="hl">清黨</span>，國共決裂｜完成＝<span class="hb">張學良歸順</span>，結束南北分裂</td></tr>
+<tr><th>十年建設<br>（民 17–26）</th><td colspan="2">體制＝<span class="hl">訓政</span>，國民黨<span class="hl">以黨治國</span>｜財政＝收回<span class="hb">關稅自主權</span>、<span class="hb">廢兩改元</span>、發行<span class="hl">法幣</span>｜先安內＝<span class="hb">剿共</span>（中共展開<span class="hb">長征</span>）｜後攘外＝因應日本侵略</td></tr>
+<tr><th colspan="3" class="grp">日本擴張與中日戰爭</th></tr>
+<tr><th>背景</th><td colspan="2"><span class="hb">經濟大恐慌</span>刺激，1930 年代<span class="hl">軍國主義</span>抬頭</td></tr>
+<tr><th>民 20（1931）</th><td colspan="2"><span class="hl">九一八事變</span> → 東北淪陷 → 民 21 扶植<span class="hb">溥儀</span>成立<span class="hl">滿洲國</span></td></tr>
+<tr><th>民 25（1936）</th><td colspan="2"><span class="hl">西安事變</span> → 結束剿共，中共<span class="hb">轉危為安</span>，國共第二次合作</td></tr>
+<tr><th>前期戰況<br>（民 26–30）</th><td colspan="2"><span class="hl">七七事變</span>引爆戰火 → 日軍進攻上海 → 政府<span class="hb">遷都重慶</span> → <span class="hb">南京大屠殺</span></td></tr>
+<tr><th>後期戰況<br>（民 30–34）</th><td colspan="2">轉捩點＝<span class="hl">珍珠港事變</span>，美國參戰、歐亞戰場合流｜外交＝英美<span class="hb">放棄在華特權</span>、<span class="hb">開羅會議</span>、<span class="hb">雅爾達會議</span>｜結束＝美國投擲<span class="hl">原子彈</span>，日本<span class="hl">無條件投降</span></td></tr>
+</table>`},
+
+c14:{title:"國共關係演進　★★核心",html:`<table>
+<tr><th>階段</th><th>容共</th><th>分共</th><th>剿共</th><th>聯共</th><th>抗共</th></tr>
+<tr><th>事件</th><td>①<span class="hl">聯俄容共</span><br>（第一次合作）</td><td>②<span class="hl">國共分裂</span><br>（清黨）</td><td>③<span class="hl">剿共</span><br>（中共長征）</td><td>④<span class="hl">聯共抗日</span><br>（第二次合作）</td><td>⑤<span class="hl">國共內戰</span> ⑥<span class="hl">反共戡亂</span></td></tr>
+<tr><th>民國年</th><td><span class="hb">12</span></td><td><span class="hb">16</span></td><td><span class="hb">19</span>（23–24 長征）</td><td><span class="hb">25</span> 西安事變<br><span class="hb">26</span> 七七事變</td><td><span class="hb">34</span> 二戰結束<br><span class="hb">38</span> 政府遷臺<br><span class="hb">80</span> 終止動員戡亂</td></tr>
+<tr><th colspan="6" style="text-align:left">國共內戰時，中共獲<span class="hl">蘇聯扶植</span>，國民政府則<span class="hl">外交逐漸陷入困境</span>；民國 68 年<span class="hb">中國與美建交</span></th></tr>
+</table>`},
+
+c15:{title:"新文化運動 vs 文化大革命",html:`<table>
+<tr><th>事件</th><th>新文化運動</th><th>文化大革命</th></tr>
+<tr><th>時間</th><td><span class="hb">1915 年起</span>（民 4）</td><td><span class="hb">1966～1976 年</span></td></tr>
+<tr><th>背景</th><td>知識分子主張思想文化革新，以擺脫<span class="hl">國家積弱不振</span></td><td><span class="hl">毛澤東</span>為了<span class="hl">奪回權力</span></td></tr>
+<tr><th>推動者</th><td><span class="hb">陳獨秀、胡適、蔡元培、魯迅</span></td><td><span class="hb">毛澤東</span></td></tr>
+<tr><th>口號</th><td>「<span class="hl">德先生，賽先生</span>」（民主、科學）</td><td>「<span class="hl">革命無罪，造反有理</span>」、「<span class="hl">破四舊，立四新</span>」</td></tr>
+<tr><th>內容</th><td>・引進西方思潮（例：共產主義）<br>・推廣<span class="hl">白話文</span>（魯迅〈狂人日記〉）</td><td>・利用<span class="hl">紅衛兵</span>階級鬥爭，破壞傳統文物<br>・宣傳毛澤東思想及塑造個人崇拜（《毛語錄》）</td></tr>
+<tr><th>影響</th><td>有助於新思潮在中國的傳播</td><td>造成<span class="hl">十年浩劫</span>，革命思想刺激歐美學運</td></tr>
+<tr><th colspan="3" style="text-align:left">共同點：兩者<span class="hl">均批判儒家傳統文化</span></th></tr>
+</table>`},
+
+c16:{title:"五四運動 vs 六四天安門事件",html:`<table>
+<tr><th>事件</th><th>五四運動</th><th>六四天安門事件</th></tr>
+<tr><th>時間</th><td><span class="hb">1919 年</span></td><td><span class="hb">1989 年</span></td></tr>
+<tr><th>起因</th><td>巴黎和會<span class="hl">山東</span>問題</td><td>改革開放後經濟成長、<span class="hl">政治保守</span></td></tr>
+<tr><th>訴求</th><td>「<span class="hl">外爭主權，內除國賊</span>」、「<span class="hl">還我青島</span>」</td><td><span class="hl">政治改革</span>、民主自由</td></tr>
+<tr><th>結果</th><td>北京政府<span class="hl">拒簽對德和約</span></td><td>統治當局派軍隊<span class="hl">鎮壓</span>廣場群眾</td></tr>
+<tr><th>影響</th><td>促成各階層覺醒，強化對國家民族的認同</td><td>遭西方國家<span class="hl">經濟制裁</span>，一度衝擊中國經濟</td></tr>
+</table>`},
+
+c17:{title:"韓戰 vs 越戰（冷戰下的東亞）",html:`<table>
+<tr><th>戰爭</th><th>韓戰</th><th>越戰</th></tr>
+<tr><th>時間</th><td><span class="hb">1950～1953 年</span></td><td><span class="hb">1961～1975 年</span></td></tr>
+<tr><th>分界</th><td>北緯 <span class="hl">38</span> 度線</td><td>北緯 <span class="hl">17</span> 度線</td></tr>
+<tr><th>背景</th><td>朝鮮半島分裂為受<span class="hb">蘇聯</span>扶植的北韓與親西方的南韓</td><td>越南脫離<span class="hb">法國</span>殖民後，共產黨控制北越，美國援助南越</td></tr>
+<tr><th>經過</th><td>北韓進攻南韓，<span class="hl">聯合國部隊</span>支援南韓；<span class="hl">中共</span>派志願軍「<span class="hl">抗美援朝</span>」</td><td>1961 年<span class="hl">美軍</span>投入，戰爭規模擴大；美國反戰聲浪高漲，1973 年撤軍</td></tr>
+<tr><th>結果</th><td>雙方簽停戰協定，<span class="hl">南北韓分裂至今</span></td><td>北越攻占<span class="hl">西貢</span>，越南統一成為共產國家</td></tr>
+<tr><th>對臺影響</th><td>美國<span class="hl">巡防臺灣海峽</span>、提供<span class="hl">美援</span> ➡ 臺灣局勢<span class="hl">轉危為安</span></td><td>—</td></tr>
+<tr><th colspan="3" style="text-align:left">意義：均為冷戰期間<span class="hl">美蘇勢力角逐</span>造成的區域衝突</th></tr>
+</table>`},
+
+c18:{title:"東南亞兩大國際組織",html:`<table>
+<tr><th>組織</th><th>東南亞公約組織（SEATO）</th><th>東南亞國家協會（東協）</th></tr>
+<tr><th>成立</th><td><span class="hb">1955 年</span></td><td><span class="hb">1967 年</span></td></tr>
+<tr><th>性質</th><td><span class="hl">軍事聯盟・反共</span></td><td><span class="hl">區域統合</span></td></tr>
+<tr><th>背景</th><td>1954 年南北越分治後，美國為<span class="hl">反制共產勢力</span>擴張</td><td>擺脫殖民獨立的東南亞各國，為加強合作、維護區域穩定</td></tr>
+<tr><th>成員</th><td>共 8 個：美英法澳紐巴基斯坦＋<span class="hb">泰國、菲律賓</span>（唯二東南亞國家）</td><td>創始＝<span class="hb">印尼、泰國、新加坡、菲律賓、馬來西亞</span>；目前 <span class="hb">11 國</span>，均為東南亞國家</td></tr>
+<tr><th>結果</th><td>意見利益分歧，<span class="hl">1977 年解散</span></td><td>冷戰後轉型注重<span class="hl">經貿合作</span>，並與中日韓澳紐組成 <span class="hb">RCEP</span></td></tr>
+<tr><th colspan="3" style="text-align:left">美國另與未加入東約組織的東亞國家簽約，如與我國簽《<span class="hl">中美共同防禦條約</span>》；東協地區是我國重要<span class="hl">進出口市場</span></th></tr>
+</table>`},
+
+c19:{title:"中美蘇三角關係演變",html:`<table>
+<tr><th>時期</th><th>1950 年代初期</th><th>1950 年代末期起</th><th>1970 年代</th><th>1980 年代後</th></tr>
+<tr><th>關係</th><td><span class="hl">中蘇友好</span></td><td><span class="hl">中蘇交惡</span></td><td><span class="hl">中美聯合制蘇</span></td><td><span class="hl">中蘇恢復往來</span></td></tr>
+<tr><th>背景</th><td>中共的成立與勢力擴張均與<span class="hb">蘇聯</span>支持有關</td><td><span class="hb">毛澤東</span>認為蘇聯企圖控制中國內政與外交</td><td>毛澤東希望改善中美關係；美國希望<span class="hb">拉攏中共制衡蘇聯</span></td><td><span class="hb">鄧小平</span>推動改革開放，希望改善與蘇聯的緊張關係</td></tr>
+<tr><th>互動</th><td>中共採<span class="hb">親蘇</span>政策，蘇聯提供資金、技術、人才</td><td>蘇聯停止援助；<span class="hl">1969 年珍寶島邊界衝突</span>，關係降至冰點</td><td>關係正常化，<span class="hl">1979 年建交</span></td><td>雙方恢復正常往來</td></tr>
+</table>`},
+
+c13:{title:"重要城市一覽",html:`<table>
+<tr><th>城市</th><th>朝代</th><th>重要性</th></tr>
+<tr><th rowspan="2"><span class="hl">廣州</span></th><td>唐</td><td>始設<span class="hb">市舶司</span></td></tr>
+<tr><td>清</td><td>乾隆時<span class="hb">一口通商</span>；鴉片戰爭後五口之一</td></tr>
+<tr><th><span class="hl">開封（汴京）</span></th><td>北宋</td><td>都城；<span class="hb">坊市合一、夜市</span>出現；張擇端《清明上河圖》的地點</td></tr>
+<tr><th><span class="hl">泉州</span></th><td>宋元</td><td>設<span class="hb">市舶司</span>；穆斯林聚居、建清淨寺</td></tr>
+<tr><th><span class="hl">杭州（臨安）</span></th><td>南宋</td><td>偏安時都城</td></tr>
+<tr><th rowspan="2"><span class="hl">北京（大都）</span></th><td>元</td><td>都城；朝廷聘<span class="hb">色目人</span>任財政官員、推行全國性紙幣</td></tr>
+<tr><td>明清</td><td>都城（<span class="hb">明成祖</span>由南京遷來）；<span class="hb">英法聯軍</span>、<span class="hb">八國聯軍</span>皆曾攻陷</td></tr>
+<tr><th><span class="hl">上海</span></th><td>清</td><td>《南京條約》開港；各國設<span class="hb">租界</span>（國中之國）；<span class="hb">城市新風貌</span>代表</td></tr>
+<tr><th><span class="hl">景德鎮</span></th><td>明清</td><td><span class="hb">專業市鎮</span>，製瓷業中心</td></tr>
+<tr><th><span class="hl">長崎</span></th><td>明清</td><td>日本鎖國時期唯一開放港，僅准<span class="hb">中國、荷蘭</span>商船</td></tr>
+</table>`}
+};
+const TBL_MAP = {
+c1:["m5Feng","p5Zhou","p5Qin","e5Jun"],
+c2:["m5Xuan","p5Cha","p5Jiu","p5Ke","e5Shi","e5Shang3"],
+c3:["m5Min","p5Xiong","p5Yong","p5Bei","p5Tian"],
+c4:["m5Wen","p5Dong","e5Zhi","m6West","p6San"],
+c5:["m6Liao","m6Yuan","p6Bei","p6Jin","p6Nan","p6Meng","p6YuanD","e6Jing"],
+c6:["m6Trade","p6Hai","p6Yin","p6Nong","e6Zhi2"],
+c7:["m7Chong","p7Opium","p7Ying","p7Jia","p7Ba","p7RiE"],
+c8:["m7Reform","p7Ziqiang","p7Wu","p7Geng","p7Lixian"],
+c9:["p7Meiji","p7Hei","p7Guang"],
+c10:["e7Gua","e7Ma"],
+c11:["m8Found","m8Yuan","m8New","p8Xin","p8Yuan","p8Jun","p8Xinwen","p8Wusi"],
+c12:["m9Bei","m9War","p9Bei","p9Ten","p9Jiu","p9Xian","p9Qi","p9Zhen"],
+c13:["p6Shi","e6Fang","p7City","e6Zhen","e6Suo"],
+c14:["p10Civil","p9Bei","e9Jiao","p9Xian","e10Con"],
+c15:["p8Xinwen","p10Cr","e10Red"],
+c16:["p8Wusi","p10Tian"],
+c17:["m10Cold","p10War","p10Viet"],
+c18:["m10Org","p10Seato","p10Asean"],
+c19:["p10Tri"]
+};
+
+
+/* ===== ② 圖形引擎（時間軸＋分層＋章節開關，靜態佈局）—— 更新資料時勿動 ===== */
+const cv = document.getElementById("graph");
+const ctx = cv.getContext("2d");
+const tip = document.getElementById("tip");
+let W=0, H=0, DPR=1;
+const nodes = N.map(n=>({...n, x:0, y:0, col:0, labelUp:false}));
+const byId = Object.fromEntries(nodes.map(n=>[n.id,n]));
+Object.entries(TBL_MAP).forEach(([t,ids])=>ids.forEach(id=>{ if(byId[id]) byId[id].tbl=t; }));
+const links = E.map(([s,t,lab,dash,cause])=>({s:byId[s], t:byId[t], lab, dash:!!dash, cause:!!cause}));
+const adj = {};
+nodes.forEach(n=>adj[n.id]=new Set());
+links.forEach(l=>{adj[l.s.id].add(l.t.id); adj[l.t.id].add(l.s.id);});
+/* 佈局重心只看實線——虛線是對照/比較用，不該把節點拉離所屬群 */
+const nbrs = {};
+nodes.forEach(n=>nbrs[n.id]=[]);
+links.forEach(l=>{ if(l.dash) return; nbrs[l.s.id].push(l.t); nbrs[l.t.id].push(l.s);});
+
+/* --- ★ 重點字：把比較表中的紅字（.hl）／藍字（.hb）拆成關鍵詞，比對節點「標題＋副標」---
+   正規化：臺=台 互通、大小寫互通（搜尋也共用此函式） */
+const normS = s => (s||"").toLowerCase().replace(/臺/g,"台");
+const HL_WORDS = {hl:new Set(), hb:new Set()};   // 3字以上：節點「點亮」比對用（2字太泛，會亮到近七成節點）
+const KW_ALL   = {hl:new Set(), hb:new Set()};   // 2字以上：衛星掛點用（限定在該節點自己的內文，2字不會泛）
+const TBL_PAIRS = {};                            // 名稱→地點 配對（來自表格「彩字（地點）」）
+{
+  const splitWords = t => normS(t)
+    .split(/[\s（）()、，,．。・／/→➡↔；;：:「」『』★＝=＋+—–\-～~｜|]+/)
+    .filter(w => w.length>=2 && !/^\d+(年|世紀)?$/.test(w));
+  const dv = document.createElement("div");
+  Object.values(TABLES).forEach(T=>{
+    dv.innerHTML = T.html;
+    dv.querySelectorAll(".hl").forEach(s=>splitWords(s.textContent).forEach(w=>{ KW_ALL.hl.add(w); if(w.length>=3) HL_WORDS.hl.add(w); }));
+    dv.querySelectorAll(".hb").forEach(s=>splitWords(s.textContent).forEach(w=>{ KW_ALL.hb.add(w); if(w.length>=3) HL_WORDS.hb.add(w); }));
+    /* 表格配對：彩字後面緊跟「（地點）」→ 記成 名稱→地點，例：聖薩爾瓦多城（基隆） */
+    dv.querySelectorAll(".hl,.hb").forEach(s=>{
+      const nx = s.nextSibling;
+      if(nx && nx.nodeType===3){
+        const m = nx.textContent.match(/^（([一-龥]{2,4})）/);
+        if(m) splitWords(s.textContent).forEach(w=>{
+          /* 只收「建物／據點」類名稱，避免「渡臺禁令（對漢人）」這種非地點括號被誤配 */
+          if(!TBL_PAIRS[w] && (/(城|府|圳)$/.test(w) || w==="馬尼拉" || w==="巴達維亞")) TBL_PAIRS[w]=m[1];
+        });
+      }
+    });
+  });
+}
+/* 補充重點詞（表格未標色但屬必背） */
+["馬關條約"].forEach(w=>{ const wn=normS(w); KW_ALL.hl.add(wn); HL_WORDS.hl.add(wn); });
+nodes.forEach(n=>{
+  const hay = normS(n.label);   // 只比對標題（含副標會亮太多）
+  if([...HL_WORDS.hl].some(w=>hay.includes(w))) n.hlk="hl";        // 紅字優先
+  else if([...HL_WORDS.hb].some(w=>hay.includes(w))) n.hlk="hb";
+});
+/* ★ 衛星掛點：每個節點把「自己內文（副標＋說明）中的紅/藍重點字」＋「副標中的地點」展開成一串小點
+   例：圓山文化 → 貝塚 → 臺北；卑南文化 → 石板屋 → 石板棺 → 玉器 → 臺東 */
+const KW_LOC = ["臺北","臺中","臺南","臺東","新北","基隆","高雄","宜蘭","花蓮","屏東","雲林","嘉義","彰化","南投","苗栗","新竹","桃園","澎湖","恆春","淡水","安平","打狗","雞籠","八里","大員","赤崁"];
+/* 衛星點停用詞：單獨掛出來沒有意義的泛用詞 */
+const KW_STOP = new Set(["司法","行政","政治","經濟","社會","文化","貿易","影響","原因","結果","背景","對抗","合作","安撫","興築","堅持","原住民","漢人","北臺","南臺","意義","發展","最重要","最早","最大","北部","南部","中部","東部","教育","醫療","府城"].map(w=>normS(w)));
+/* 至少一次出現且後面不是數字才算命中——避免「北部150、淡水18、卑南20村落」這種統計片段被拆成地名點 */
+const hasClean = (text, w)=>{
+  let i=-1;
+  while((i=text.indexOf(w,i+1))!==-1){
+    const c=text[i+w.length];
+    if(!c || !/[0-9０-９]/.test(c)) return true;
+  }
+  return false;
+};
+nodes.forEach(n=>{
+  const lab = normS(n.label);
+  /* 「（比較：…）」「（比較表…）」括號是對照別人的內容，不算本節點的重點字——先剔除再比對
+     （例：西班牙節點的說明寫「（比較：荷蘭傳基督教、創新港文）」，荷蘭/基督教/新港文不該掛在西班牙身上） */
+  const noteC = (n.note||"").replace(/（比較[^）]*）/g,"");
+  const hay = normS(n.sub||"")+"｜"+normS(noteC);
+  /* 節點內文的配對：「X建Y城/府」與「Y城/府/圳（X）」→ Y 顯示成「X－Y」，例：雞籠－聖薩爾瓦多城 */
+  const pairs = {};
+  const src = (n.sub||"")+"。"+noteC;
+  for(const m of src.matchAll(/(?:在|於)?([一-龥]{2,3})建([一-龥]{2,9}(?:城|府))/g)) pairs[m[2]] = m[1];
+  for(const m of src.matchAll(/([一-龥]{2,9}(?:城|府|圳))（([一-龥]{2,4})）/g)) if(!pairs[m[1]]) pairs[m[1]] = m[2];
+  const pairOf = w => pairs[w] || TBL_PAIRS[w] || null;
+  const kw = [];
+  const push = (w,k)=>{
+    const wN = normS(w);
+    if(KW_STOP.has(wN)) return;                                        // 泛用詞不掛
+    const eraN = normS(ERA_LABEL[n.era]||"");
+    if(n.era && (eraN.includes(wN) || wN.includes(eraN))) return;      // 分期膠囊已寫的不重掛（荷蘭節點不掛「荷蘭」「荷蘭人」）
+    const p = pairOf(w);
+    if(lab.includes(wN)){                      // 標題已有的詞：僅在有配對地點時才掛（掛的是配對資訊）
+      if(p && !lab.includes(normS(p))) kw.push({w, k, pair:p});
+      return;
+    }
+    if(hasClean(hay, wN)) kw.push(p ? {w, k, pair:p} : {w, k});
+  };
+  KW_ALL.hl.forEach(w=>push(w,"hl"));
+  KW_ALL.hb.forEach(w=>push(w,"hb"));
+  kw.sort((a,b)=> (b.pair?1:0)-(a.pair?1:0) ||                              // 配對點（地點－名稱）最優先，不被上限擠掉
+                  (a.k===b.k ? b.w.length-a.w.length : (a.k==="hl"?-1:1))); // 再紅先、長詞先
+  const picked=[];
+  kw.forEach(it=>{
+    const nw = normS(it.w);                                            // 臺＝台 正規化後再比，避免「臺北」與「台北盆地」重複掛
+    const idx = picked.findIndex(p=>{
+      const pw = normS(p.w);
+      return pw.includes(nw) || nw.includes(pw) ||
+        (p.pair && (normS(p.pair).includes(nw) || nw.includes(normS(p.pair))));
+    });
+    if(idx<0) picked.push(it);
+    else if(!picked[idx].pair && it.w.length>picked[idx].w.length) picked[idx]=it;   // 重疊時取較長的完整詞（英國→英國籍）
+  });
+  /* 「A→B」改稱/演變配對：合併成一顆「A→B」點（例：熟番→平埔族、生番→高砂族）
+     另一側若已在標題裡（不會單獨掛點），直接補在箭頭另一端 */
+  /* 第二側用 lookahead 不吃字，讓「大坌坑→圓山→卑南」這種連鎖的每一段都能配到 */
+  for(const m of src.matchAll(/([一-龥]{2,5})\s*(?:→|➡)\s*(?=([一-龥]{2,5}))/g)){
+    const na=normS(m[1]), nb=normS(m[2]);
+    const ia=picked.findIndex(p=>!p.pair && (p.w===na || na.endsWith(p.w) || p.w.endsWith(na)));
+    const ib=picked.findIndex(p=>!p.pair && (p.w===nb || nb.startsWith(p.w) || p.w.startsWith(nb)));
+    if(ia>=0 && ib>=0 && ia!==ib){
+      picked[ia] = {w: picked[ia].w+"→"+picked[ib].w, k: picked[ia].k};
+      picked.splice(ib,1);
+    } else if(ia>=0 && ib<0 && lab.includes(nb) && !picked[ia].w.includes("→")){
+      picked[ia] = {w: picked[ia].w+"→"+m[2], k: picked[ia].k};
+    } else if(ib>=0 && ia<0 && lab.includes(na) && !picked[ib].w.includes("→")){
+      picked[ib] = {w: m[1]+"→"+picked[ib].w, k: picked[ib].k};
+    }
+  }
+  const subN = normS(n.sub||"");
+  KW_LOC.forEach(L=>{
+    const Ln=normS(L);
+    /* 「配對點」已含該地點、或已有同名關鍵字時略過；一般包含關係（淡水女學堂）不吃掉地點本身 */
+    /* 已被任一重點字包含的地點不再單獨掛（例：已有「台北盆地」就不再掛「臺北」）*/
+    const used = picked.some(p=>(p.pair && (normS(p.pair).includes(Ln) || normS(p.w).includes(Ln))) || normS(p.w).includes(Ln));
+    if(subN.includes(Ln) && !lab.includes(Ln) && !used) picked.push({w:L,k:"loc"});
+  });
+  /* 「X市的A、B」地名群組 → 一顆配對點「X－A・B」（例：臺南－新營・林鳳營／高雄－左營・前鎮） */
+  for(const m of src.matchAll(/([一-龥]{2,3})市的([一-龥]{2,5}(?:、[一-龥]{2,5})*)/g)){
+    const names = m[2].split("、").join("・");
+    if(!picked.some(p=>p.pair===m[1] && p.w===names)) picked.push({w:names, k:"loc", pair:m[1]});
+  }
+  /* 「X人＝A、B」對應群組 → 每組一顆配對點，分開向下展開
+     （例：漳州－開漳聖王／泉州－保生大帝・清水祖師／潮州－三山國王） */
+  for(const m of src.matchAll(/([一-龥]{2,4})人(?:（[^）]*）)?＝([一-龥]{2,6}(?:、[一-龥]{2,6})*)/g)){
+    const names = m[2].split("、").join("・");
+    if(!picked.some(p=>p.pair===m[1] && p.w===names)) picked.push({w:names, k:"loc", pair:m[1]});
+  }
+  /* 已被配對點涵蓋的城市字（高雄、臺南…）不再單獨掛 */
+  for(let i=picked.length-1;i>=0;i--){
+    const it=picked[i];
+    if(it.pair) continue;
+    if(picked.some(p=>p!==it && p.pair && (normS(p.pair).includes(normS(it.w)) || normS(p.w).includes(normS(it.w))))) picked.splice(i,1);
+  }
+  /* 相鄰節點的標籤已呈現的資訊不再掛——樹上已經是「節點＋連線」了
+     （例：聖薩爾瓦多城下有子節點「今基隆」，就不再掛「基隆－聖薩爾瓦多城」衛星點） */
+  const nbLabs = nbrs[n.id].map(o=>normS(o.label));
+  const picked2 = picked.filter(it=>{
+    const wN = normS(it.w), pN = it.pair ? normS(it.pair) : null;
+    return !nbLabs.some(L=> L.includes(wN) || (pN && L.includes(pN)));
+  });
+  /* 多個地點合併成一顆（例：新北・八里）並保證保留；帶配對的地點群組（臺南－新營…）各自一顆；其餘上限 6 顆 */
+  let locs = picked2.filter(it=>it.k==="loc" && !it.pair);
+  const locPairs = picked2.filter(it=>it.k==="loc" && it.pair);
+  const rest = picked2.filter(it=>it.k!=="loc");
+  if(locs.length>1) locs = [{w: locs.map(l=>l.w).join("・"), k:"loc"}];
+  const fin = [...rest.slice(0,6), ...locPairs, ...locs];
+  /* 顯示順序固定：❶國籍（…籍）❷地點 ❸配對組 ❹其他——同類節點左右對照時同位置同類型 */
+  const catRank = it => {
+    if(/籍$/.test(it.w)) return 0;
+    if(it.pair) return 2;
+    if(it.k==="loc" || KW_LOC.some(L=>normS(L)===normS(it.w))) return 1;   // 地名（不論來源）都排第二位
+    return 3;
+  };
+  fin.sort((a,b)=>catRank(a)-catRank(b));
+  fin.forEach(it=>{ it.d = (it.pair ? it.pair+"－"+it.w : it.w).replace(/台/g,"臺"); });   // 顯示文字統一用「臺」
+  if(fin.length) n.kw = fin;
+});
+/* 父子去重：實線相鄰的兩節點掛到同一顆字時，保留在階層較高者（主題＞重點・時間＞實例）
+   例：「馬賽人與外人合作」已掛 鹿皮／貿易，「馬賽人」就不再重掛 */
+{
+  const rank = {theme:3, point:2, time:2, ex:1};
+  links.forEach(l=>{
+    if(l.dash) return;
+    const a=l.s, b=l.t;
+    if(!a.kw || !b.kw) return;
+    const [hi,lo] = (rank[a.kind]||1) >= (rank[b.kind]||1) ? [a,b] : [b,a];
+    /* 配對點（X－A・B）保留在較下層的具體節點，從上層移除；一般字保留在上層 */
+    const loW = new Set(lo.kw.map(p=>normS(p.w)));
+    hi.kw = hi.kw.filter(it=>!(it.pair && loW.has(normS(it.w))));
+    if(!hi.kw.length) delete hi.kw;
+    const keep = lo.kw.filter(it=> it.pair || !(hi.kw||[]).some(p=>normS(p.w)===normS(it.w)));
+    if(keep.length) lo.kw = keep; else delete lo.kw;
+  });
+}
+
+/* ===== ✎ 衛星掛點編輯：覆蓋層（Patch Layer）=====
+   原則：原始資料區 N／E 完全不動。使用者的修改存成一層補丁，
+   載入時套在「自動算出來的衛星」之上；隨時可還原、可匯出 JSON 合併回正式檔。 */
+const KW_KEY = "cnhist_kw_v1";
+let KWEDIT = {ver:1, base:"cn-v1", kw:{}};
+try{ const raw = localStorage.getItem(KW_KEY); const o = raw && JSON.parse(raw); if(o && o.kw) KWEDIT = o; }catch(e){}
+/* 自動算出來的原始衛星先存一份，「還原自動」靠它 */
+nodes.forEach(n=>{ n._kwAuto = n.kw ? n.kw.map(x=>({...x})) : null; });
+function applyKwEdits(){
+  nodes.forEach(n=>{
+    const ov = KWEDIT.kw[n.id];
+    if(ov){
+      const items = ov.map(it=>({w:it.d, d:it.d, k:it.k||"hl"}));
+      if(items.length) n.kw = items; else delete n.kw;
+      n.kwEdited = true;
+    }else{
+      if(n._kwAuto) n.kw = n._kwAuto.map(x=>({...x})); else delete n.kw;
+      n.kwEdited = false;
+    }
+  });
+}
+function saveKwEdits(){ try{ localStorage.setItem(KW_KEY, JSON.stringify(KWEDIT)); }catch(e){} }
+/* 目前顯示中的衛星 → 可編輯的純資料陣列 */
+function kwListOf(n){ return (n.kw||[]).map(it=>({d: it.d || it.w, k: it.k || "hl"})); }
+/* list=null → 移除覆蓋、回到自動；list=[] → 這個節點不掛任何衛星 */
+function setKw(n, list){
+  if(list === null) delete KWEDIT.kw[n.id];
+  else KWEDIT.kw[n.id] = list.filter(it=>it.d && it.d.trim()).map(it=>({d:it.d.trim(), k:it.k||"hl"}));
+  applyKwEdits();
+  saveKwEdits();
+}
+applyKwEdits();
+
+/* --- 章節開關 --- */
+const chOn = {5:true, 6:true, 7:true, 8:true, 9:true, 10:true};
+const chVis = n => !n.ch || !!chOn[n.ch];
+
+/* --- 分層：0 年代 / 1 事件 / 2 人物 / 3 地點 / 4 重點 / 5 主題 --- */
+let LW = 1800;
+const ROW_Y = [-400, -225, -55, 115, 295, 470];
+const ROW_NAME = ["年代", "事件", "人物", "地點", "重點", "主題"];
+const ROW_OF_CAT = {"年代":0,"事件":1,"人物":2,"地點":3,"重點":4,"主題":5};
+const ROW_TOP = [-400, -225, -55, 115, 295, 470];   // 佈局時依副線數重算
+nodes.forEach(n=>{ n.cat = catOf(n); n.row = ROW_OF_CAT[n.cat]; });
+const rows = [[],[],[],[],[],[]];
+
+function place(arr){
+  const m = arr.length;
+  arr.forEach((n,i)=>{
+    n.x = m===1 ? 0 : -LW/2 + i*LW/(m-1);
+    n.y = ROW_Y[n.row];
+    n.col = i;
+  });
+}
+/* 每個節點的「年代錨點」＝它連到的最早時間節點的 x；沒有就取鄰居的平均 */
+const KRANK = {time:0, theme:1, point:2, ex:3};
+function anchorAll(){
+  nodes.forEach(n=>{ n._ax = undefined; });
+  rows[0].forEach(n=>{ n._ax = n.x; });
+  const avg = a2 => a2.reduce((sum,v)=>sum+v,0)/a2.length;
+  const tAnchor = n => {
+    /* 指向「年代節點」的連線一律採用（含虛線，那是年份註記）；
+       其餘推論仍只走實線，避免跨章對照把年代拉錯。 */
+    const tn = [...adj[n.id]].map(id=>byId[id]).filter(o=>o && chVis(o) && o.kind==="time");
+    return tn.length ? Math.min(...tn.map(o=>o.x)) : undefined;
+  };
+  /* 由下往上：實例→重點→主題，沒有自己的年代就取子節點的平均 */
+  ["ex","point","theme"].forEach(kind=>{
+    nodes.filter(n=>n.kind===kind && chVis(n)).forEach(n=>{
+      const t = tAnchor(n);
+      if(t!==undefined){ n._ax = t; return; }
+      const lower = nbrs[n.id].filter(o=>o && chVis(o) && KRANK[o.kind]===KRANK[kind]+1 && o._ax!==undefined);
+      if(lower.length) n._ax = avg(lower.map(o=>o._ax));
+    });
+  });
+  /* 還是沒有的：往上一層拿，再不行就取任意實線鄰居 */
+  for(let p=0;p<3;p++){
+    nodes.forEach(n=>{
+      if(n.kind==="time" || n._ax!==undefined || !chVis(n)) return;
+      const nb = nbrs[n.id].filter(o=>o && chVis(o));
+      const up = nb.filter(o=>KRANK[o.kind]===KRANK[n.kind]-1 && o._ax!==undefined);
+      if(up.length){ n._ax = avg(up.map(o=>o._ax)); return; }
+      const any = nb.filter(o=>o._ax!==undefined);
+      if(any.length) n._ax = avg(any.map(o=>o._ax));
+    });
+  }
+  nodes.forEach(n=>{ if(n._ax===undefined) n._ax = 0; });
+}
+/* 置位：x 直接等於年代錨點（精準對齊），同一列放不下就往下疊一條副線。
+   這樣每個節點都在自己的年代正下方，不必為了避讓而左右偏移。 */
+let LANE_H = 46;      // 副線之間的垂直距離（★重點字模式放大，見 layout()）
+let ROW_PAD = 132;    // 列與列之間的距離（同上）
+function placeRow(arr){
+  const GAP = 124, SHIFT = 100;   // 容許的最大左右微調（小於一個間距）
+  /* 同一年代錨點的節點：有 ord（時間順序）者依 ord 由上而下堆疊，讓垂直順序＝時間先後 */
+  arr.sort((a,b)=>a._ax-b._ax || (a.ord||99)-(b.ord||99) || a.id.localeCompare(b.id));
+  const laneLast = [];
+  arr.forEach(n=>{
+    let lane = 0, x = n._ax;
+    for(; lane <= laneLast.length; lane++){
+      if(laneLast[lane] === undefined){ x = n._ax; break; }       // 開新副線
+      const need = laneLast[lane] + GAP;
+      if(n._ax >= need){ x = n._ax; break; }                      // 原位就放得下
+      if(need - n._ax <= SHIFT){ x = need; break; }               // 往右挪一點就放得下
+    }
+    laneLast[lane] = x;
+    n.x = x;
+    n.lane = lane;
+  });
+  arr.forEach((n,i)=>{ n.col = i; });
+  return Math.max(1, laneLast.length);
+}
+function layout(){
+  /* ★重點字模式：衛星鏈（最長約160）一律往下掛，副線距與列距放大到塞得下，關閉時還原 */
+  LANE_H = hlOn ? 195 : 46;
+  ROW_PAD = hlOn ? 235 : 132;
+  rows.forEach(r=>r.length=0);
+  nodes.forEach(n=>{ n.fanned=false; if(chVis(n)) rows[n.row].push(n); });
+  const maxN = Math.max(1, ...rows.map(r=>r.length));
+  LW = Math.max(1800, maxN*132);
+  rows[0].sort((a,b)=>a.id.localeCompare(b.id));
+  place(rows[0]);
+  anchorAll();
+  /* 主題下方長樹（心智圖式）：實線「只連到一個主題」的專屬節點，改掛到該主題正下方扇形展開。
+     左→右＝時間順序（ord 優先，再依年代錨點）；超過 4 顆分兩層交錯。★重點字模式間距放大。
+     ⚠ 先決定認領，再排中間列：被樹認領的節點不佔中間列空間，整列空了就不佔高度（消除中間大片空白）。 */
+  const FAN_DY  = hlOn ? 240 : 130;   // 主題到第一層的距離
+  const FAN_R2  = hlOn ? 205 : 96;    // 兩層交錯的層距
+  const FAN_DX  = hlOn ? 165 : 132;   // 扇形水平間距
+  const ordSort = (a,b)=>(a.ord||99)-(b.ord||99) || a._ax-b._ax || a.id.localeCompare(b.id);
+  /* 先蒐集每棵樹的內容並估寬 */
+  const claimed = new Set();
+  const forest = rows[5].slice().sort((a,b)=>a._ax-b._ax || a.id.localeCompare(b.id)).map(t=>{
+    const kids = nodes.filter(n=>chVis(n) && n.row>=1 && n.row<=4 && !claimed.has(n.id) &&
+      nbrs[n.id].includes(t) &&
+      nbrs[n.id].filter(o=>o.row===5).length===1);
+    kids.sort(ordSort);
+    kids.forEach(n=>claimed.add(n.id));
+    const subsMap = new Map();
+    kids.forEach(k=>{
+      const subs = nodes.filter(n=>chVis(n) && n.row>=1 && n.row<=4 && !claimed.has(n.id) &&
+        nbrs[n.id].includes(k) &&
+        nbrs[n.id].filter(o=>o.row===5).length===0 &&
+        nbrs[n.id].filter(o=>kids.includes(o)).length===1);
+      if(!subs.length) return;
+      subs.sort(ordSort);
+      subs.forEach(n=>claimed.add(n.id));
+      subsMap.set(k, subs);
+    });
+    /* 第三層：實線只連到「某顆第二層節點」的專屬子節點（例：古城 → 今地名） */
+    const subs3Map = new Map();
+    [...subsMap.values()].flat().forEach(s=>{
+      const s3 = nodes.filter(n=>chVis(n) && n.row>=1 && n.row<=4 && !claimed.has(n.id) &&
+        nbrs[n.id].includes(s) &&
+        nbrs[n.id].filter(o=>o.row===5).length===0);
+      if(!s3.length) return;
+      s3.sort(ordSort);
+      s3.forEach(n=>claimed.add(n.id));
+      subs3Map.set(s, s3);
+    });
+    const two = kids.length>4;
+    const cols = two ? Math.ceil(kids.length/2) : kids.length;
+    const totalSub = [...subsMap.values()].reduce((s,a)=>s+a.length,0);   // 第二層整棵樹統一均分
+    const totalS3 = [...subs3Map.values()].reduce((s,a)=>s+a.length,0);
+    const w = Math.max(200, cols*FAN_DX, totalSub*FAN_DX*0.95, totalS3*FAN_DX*0.9) + 60;   // 樹寬＋樹間距
+    return {t, kids, subsMap, subs3Map, two, cols, totalSub, w};
+  });
+  /* 中間列只排「沒被樹認領」的節點；整列空了就不佔高度 */
+  for(let r=1;r<=4;r++){
+    const keep = rows[r].filter(n=>!claimed.has(n.id));
+    rows[r].length = 0; rows[r].push(...keep);
+  }
+  const lanes = [1];
+  let y = ROW_Y[0];
+  rows[0].forEach(n=>{ n.y = y; });
+  ROW_TOP[0] = y;
+  for(let r=1;r<=4;r++){
+    if(!rows[r].length){ ROW_TOP[r] = y; lanes[r] = 0; continue; }   // 空列：跳過、不佔高度
+    lanes[r] = placeRow(rows[r]);
+    y += ROW_PAD;
+    ROW_TOP[r] = y;
+    rows[r].forEach(n=>{ n.y = y + n.lane*LANE_H; });
+    y += (lanes[r]-1)*LANE_H;
+  }
+  y += ROW_PAD;
+  ROW_TOP[5] = y;
+  /* 標籤位置（樹上節點在樹排版時另設） */
+  rows.forEach((r,i)=>{
+    if(i===5) return;
+    r.forEach(n=>{ n.labelUp = (i===0) ? (n.col%2===1) : ((lanes[i]||1)>1 ? false : n.col%2===1); });
+  });
+  /* 主題＝樹根：依年代序水平排開，全部回到同一條水平線，樹與樹不重疊 */
+  const totalW = forest.reduce((s,f)=>s+f.w, 0);
+  let fx = -totalW/2;
+  const y5 = ROW_TOP[5];
+  forest.forEach(f=>{
+    const {t, kids, subsMap, subs3Map, two, cols, totalSub, w} = f;
+    t.x = fx + w/2; t.y = y5; t.lane = 0; t.labelUp = false;
+    kids.forEach((n,i)=>{
+      const r2 = two ? i%2 : 0;
+      const c  = two ? Math.floor(i/2) : i;
+      n.x = t.x + (c-(cols-1)/2)*FAN_DX;
+      n.y = y5 + FAN_DY + r2*FAN_R2;
+      n.labelUp = false;
+      n.fanned = true;
+    });
+    /* 第二層：整棵樹統一均分（依分支順序連續排開），避免各分支各自置中互相重疊 */
+    const lv2y = y5 + FAN_DY + (two?FAN_R2:0) + FAN_R2;
+    let j = 0;
+    kids.forEach(k=>{
+      const subs = subsMap.get(k);
+      if(!subs) return;
+      subs.forEach(n=>{
+        n.x = t.x + (j-(totalSub-1)/2)*FAN_DX*0.95;
+        n.y = lv2y;
+        n.labelUp = false;
+        n.fanned = true;
+        j++;
+      });
+    });
+    /* 第三層：掛在各自第二層節點正下方（例：古城 → 今地名） */
+    const lv3y = lv2y + FAN_R2;
+    subs3Map.forEach((s3, parent)=>{
+      s3.forEach((n,i)=>{
+        n.x = parent.x + (i-(s3.length-1)/2)*FAN_DX*0.9;
+        n.y = lv3y;
+        n.labelUp = false;
+        n.fanned = true;
+      });
+    });
+    fx += w;
+  });
+}
+let hlOn = false;       // ★ 重點字開關（layout() 會讀，須先宣告）
+layout();
+
+// 視圖
+let scale = 0.9, tx = 0, ty = 0;
+const hidden = {"年代":false,"事件":false,"人物":false,"地點":false,"重點":false,"主題":false};
+let hoverN = null, selN = null, dragN = null, panning = false;
+let lastX=0, lastY=0;
+let searchSet = null;   // 搜尋命中節點 id 集（畫布高亮用；draw 會讀，須先宣告）
+
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+let C = {};
+function refreshColors(){
+  C = {
+    canvas:css("--canvas"), ink:css("--ink"), muted:css("--muted"),
+    edge:css("--edge"), edgeHl:css("--edge-hl"), hairline:css("--hairline"),
+    theme:css("--theme"), pt:css("--pt"),
+    blue:css("--blue"), red:css("--red"), green:css("--green"), orange:css("--orange")
+  };
+}
+function nodeColor(n){
+  if(n.era) return C[ERA_C[n.era]];
+  if(n.kind==="theme") return C.theme;
+  if(n.kind==="time") return C.muted;
+  return C.pt;
+}
+function nodeR(n){ return KIND[n.kind].r; }
+function visible(n){ return chVis(n) && !hidden[n.cat]; }
+
+function resize(){
+  DPR = window.devicePixelRatio||1;
+  W = innerWidth; H = innerHeight;
+  cv.width = W*DPR; cv.height = H*DPR;
+  cv.style.width = W+"px"; cv.style.height = H+"px";
+}
+addEventListener("resize", resize);
+resize(); refreshColors();
+if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", refreshColors);
+
+let autoFit = true;
+function fitView(){
+  const act = nodes.filter(visible);
+  if(!act.length) return;
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  act.forEach(n=>{
+    x0=Math.min(x0,n.x); y0=Math.min(y0,n.y);
+    x1=Math.max(x1,n.x); y1=Math.max(y1,n.y);
+  });
+  x0 -= 150; x1 += 110;
+  y0 -= (!hidden["年代"] && rows[0].length) ? 122 : 90;
+  y1 += hlOn ? 220 : 70;   // 重點字模式：底列往下掛的衛星鏈要留空間
+  const topPad=120, botPad=60, pad=30;
+  const bw=Math.max(x1-x0,50), bh=Math.max(y1-y0,50);
+  const ts=Math.min((W-pad*2)/bw, (H-topPad-botPad)/bh, 1.6);
+  const cx=(x0+x1)/2, cy=(y0+y1)/2;
+  const ttx=W/2-cx*ts, tty=topPad+(H-topPad-botPad)/2-cy*ts;
+  scale+=(ts-scale)*0.15; tx+=(ttx-tx)*0.15; ty+=(tty-ty)*0.15;
+}
+
+/* 因果邊：在靠近終點處畫一個箭頭，方向由 mid→終點推得 */
+function arrowHead(l, mid, hl){
+  const tx0 = l.t.x, ty0 = l.t.y;
+  let dx = tx0 - mid.mx, dy = ty0 - mid.my;
+  const len = Math.hypot(dx, dy) || 1;
+  dx /= len; dy /= len;
+  const back = nodeR(l.t) + 3/scale;
+  const ax = tx0 - dx*back, ay = ty0 - dy*back;
+  const sz = 9/scale;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(ax, ay);
+  ctx.lineTo(ax - dx*sz + dy*sz*0.5, ay - dy*sz - dx*sz*0.5);
+  ctx.lineTo(ax - dx*sz - dy*sz*0.5, ay - dy*sz + dx*sz*0.5);
+  ctx.closePath();
+  ctx.fillStyle = hl ? C.edgeHl : C.ink;
+  ctx.globalAlpha = hl ? 0.95 : 0.7;
+  ctx.fill();
+  ctx.restore();
+}
+function edgePath(l){
+  if(l.s.row===l.t.row){
+    const dir = (l.s.row===0 || l.s.row===rows.length-1) ? 1 : -1;
+    const dist = Math.abs(l.t.x-l.s.x);
+    const off = dir * Math.min(90, Math.max(35, dist*0.12));
+    const cx=(l.s.x+l.t.x)/2, cy=(l.s.y+l.t.y)/2+off;
+    ctx.moveTo(l.s.x,l.s.y);
+    ctx.quadraticCurveTo(cx,cy,l.t.x,l.t.y);
+    return {mx:(l.s.x+2*cx+l.t.x)/4, my:(l.s.y+2*cy+l.t.y)/4};
+  }
+  ctx.moveTo(l.s.x,l.s.y); ctx.lineTo(l.t.x,l.t.y);
+  return {mx:(l.s.x+l.t.x)/2, my:(l.s.y+l.t.y)/2};
+}
+
+const FONT = f=>`${f.w?f.w+" ":""}${f.s}px system-ui, -apple-system, "Microsoft JhengHei", sans-serif`;
+const BAND_DY = {1:-80, 2:-52}, BAND_H = 24;
+/* 依可見時間節點的年代內插出「某西元年」在軸上的 x，再畫朝代／年號帶 */
+function drawReigns(fsBase){
+  const pts = [];
+  rows[0].forEach(n=>{ if(typeof n.y2==="number") pts.push({y:n.y2, x:n.x}); });
+  pts.sort((a,b)=>a.x-b.x);
+  if(pts.length < 2) return;
+  const first = pts[0], last = pts[pts.length-1];
+  const xOf = y=>{
+    if(y <= first.y) return first.x - 34;
+    if(y >= last.y)  return last.x + 34;
+    for(let i=1;i<pts.length;i++){
+      if(y <= pts[i].y){
+        const a = pts[i-1], b = pts[i];
+        return a.x + (b.x-a.x)*((y-a.y)/Math.max(1, b.y-a.y));
+      }
+    }
+    return last.x;
+  };
+  let anyT2 = false;
+  REIGNS.forEach((rg,i)=>{
+    if(rg.ch && !chOn[rg.ch]) return;
+    const x0 = xOf(rg.from), x1 = xOf(rg.to), w = x1-x0;
+    if(w < 8) return;
+    if(rg.tier===2) anyT2 = true;
+    const cy = ROW_TOP[0] + BAND_DY[rg.tier];
+    ctx.globalAlpha = rg.tier===1 ? 0.22 : (i%2 ? 0.13 : 0.21);
+    ctx.fillStyle = C[rg.c];
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(x0+1, cy-BAND_H/2, w-2, BAND_H, 5);
+    else ctx.rect(x0+1, cy-BAND_H/2, w-2, BAND_H);
+    ctx.fill();
+    let fs = fsBase(rg.tier===1 ? 13 : 12);
+    ctx.font = FONT({s:fs, w:600});
+    if(ctx.measureText(rg.label).width > w-10){ fs = fsBase(9); ctx.font = FONT({s:fs, w:600}); }
+    if(ctx.measureText(rg.label).width <= w-6){
+      ctx.globalAlpha = 0.95; ctx.fillStyle = C.ink;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(rg.label, (x0+x1)/2, cy);
+    }
+  });
+  ctx.globalAlpha = 0.8; ctx.fillStyle = C.muted;
+  ctx.font = FONT({s:fsBase(11), w:600});
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("政權", -LW/2-60, ROW_TOP[0]+BAND_DY[1]);
+  if(anyT2) ctx.fillText("年號", -LW/2-60, ROW_TOP[0]+BAND_DY[2]);
+  ctx.globalAlpha = 1;
+}
+/* 關聯集（不限層數）：沿實線「往下」取整棵子樹＋「往上」取完整上層脈絡，再補直接相鄰（含虛線） */
+function relatedSet(f){
+  const set = new Set([f.id]);
+  let stack=[f];
+  while(stack.length){            // 往下（同層或更下層）
+    const a=stack.pop();
+    links.forEach(l=>{
+      if(l.dash) return;
+      let b=null;
+      if(l.s===a && l.t.row>=a.row) b=l.t;
+      else if(l.t===a && l.s.row>=a.row) b=l.s;
+      if(b && !set.has(b.id)){ set.add(b.id); stack.push(b); }
+    });
+  }
+  const up=new Set([f.id]);
+  stack=[f];
+  while(stack.length){            // 往上（同層或更上層）
+    const a=stack.pop();
+    links.forEach(l=>{
+      if(l.dash) return;
+      let b=null;
+      if(l.s===a && l.t.row<=a.row) b=l.t;
+      else if(l.t===a && l.s.row<=a.row) b=l.s;
+      if(b && !up.has(b.id)){ up.add(b.id); set.add(b.id); stack.push(b); }
+    });
+  }
+  links.forEach(l=>{ if(l.s===f) set.add(l.t.id); else if(l.t===f) set.add(l.s.id); });
+  return set;
+}
+
+function draw(){
+  if(autoFit) fitView();
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.fillStyle = C.canvas;
+  ctx.fillRect(0,0,W,H);
+  ctx.translate(tx,ty); ctx.scale(scale,scale);
+
+  const focus = hoverN || selN;
+  const fset = focus ? relatedSet(focus) : null;
+  const isNb = n => fset && fset.has(n.id);
+  const fsBase = s => s/Math.max(scale,0.72);
+
+  ctx.globalAlpha = 1;
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  ctx.font = FONT({s:fsBase(12), w:600});
+  ROW_NAME.forEach((name,i)=>{
+    if(hidden[name] || !rows[i].length) return;
+    ctx.fillStyle = C[CAT[name].ck] || C.muted; ctx.globalAlpha = .9;
+    ctx.fillText(name, -LW/2-60, ROW_TOP[i]);
+  });
+  if(!hidden["年代"] && rows[0].length){
+    ctx.globalAlpha=.8;
+    ctx.strokeStyle = C.hairline; ctx.lineWidth = 1.2/scale;
+    ctx.beginPath(); ctx.moveTo(-LW/2-40, ROW_TOP[0]); ctx.lineTo(LW/2+40, ROW_TOP[0]); ctx.stroke();
+    drawReigns(fsBase);
+  }
+
+  links.forEach(l=>{
+    if(!visible(l.s)||!visible(l.t)) return;
+    const direct = focus && (l.s===focus||l.t===focus);
+    const hl = direct || (fset && !l.dash && fset.has(l.s.id) && fset.has(l.t.id));
+    const dim = focus ? !hl : (searchSet ? !(searchSet.has(l.s.id)&&searchSet.has(l.t.id)) : (hlOn ? !((l.s.hlk||l.s.kw)&&(l.t.hlk||l.t.kw)) : false));
+    ctx.beginPath();
+    ctx.setLineDash(l.dash?[5,5]:[]);
+    const mid = edgePath(l);
+    ctx.lineWidth = (hl?2:(l.cause?1.6:1.2))/scale;
+    ctx.strokeStyle = hl ? C.edgeHl : (l.cause ? C.ink : C.edge);
+    ctx.globalAlpha = dim ? ((!focus&&!searchSet&&hlOn)?0.18:0.07) : (hl?0.9:(l.cause?0.62:0.45));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    if(l.cause && !dim) arrowHead(l, mid, hl);
+    if(direct && scale>0.5){
+      ctx.font = FONT({s:11/scale});
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      const w = ctx.measureText(l.lab).width;
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = C.canvas;
+      ctx.fillRect(mid.mx-w/2-3/scale, mid.my-8/scale, w+6/scale, 16/scale);
+      ctx.fillStyle = C.muted;
+      ctx.fillText(l.lab, mid.mx, mid.my);
+    }
+  });
+
+  const mildHl = !focus && !searchSet && hlOn;   // 重點字模式：其餘節點淡化但仍可辨識
+  nodes.forEach(n=>{
+    if(!visible(n)) return;
+    const dim = focus ? !isNb(n) : (searchSet ? !searchSet.has(n.id) : (hlOn ? !(n.hlk||n.kw) : false));
+    const r = nodeR(n) * (n===focus?1.25:1);
+    ctx.globalAlpha = dim ? (mildHl?0.35:0.12) : 1;
+    ctx.beginPath();
+    if(n.kind==="time"){
+      const d = r*1.25;
+      ctx.moveTo(n.x, n.y-d); ctx.lineTo(n.x+d, n.y);
+      ctx.lineTo(n.x, n.y+d); ctx.lineTo(n.x-d, n.y);
+      ctx.closePath();
+    } else {
+      ctx.arc(n.x,n.y,r,0,2*Math.PI);
+    }
+    ctx.fillStyle = nodeColor(n);
+    ctx.fill();
+    if(hlOn && n.hlk && !dim){          // ★ 重點字光圈（紅字紅圈、藍字藍圈）
+      ctx.lineWidth = 2.5/scale;
+      ctx.strokeStyle = n.hlk==="hl" ? C.red : C.blue;
+      ctx.globalAlpha = 0.95;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r + 4.5/Math.max(scale,0.5), 0, 2*Math.PI);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    if(n===selN){
+      ctx.lineWidth=2.5/scale;
+      ctx.strokeStyle=C.ink;
+      ctx.stroke();
+    }
+    const fs = fsBase(n.kind==="theme"?13:11);
+    ctx.font = FONT({s:fs, w:(n.kind==="theme"||(hlOn&&n.hlk))?600:0});
+    const w = ctx.measureText(n.label).width;
+    const gap = (nodeR(n)*(n.kind==="time"?1.25:1)) + fs*0.75;
+    const ly = n.labelUp ? n.y-gap : n.y+gap;
+    ctx.globalAlpha = dim ? (mildHl?0.4:0.20) : 0.85;
+    ctx.fillStyle = C.canvas;
+    ctx.fillRect(n.x-w/2-3, ly-fs/2-2, w+6, fs+4);
+    ctx.globalAlpha = dim ? (mildHl?0.5:0.25) : 0.95;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillStyle = dim ? C.muted : (hlOn && n.hlk ? (n.hlk==="hl"?C.red:C.blue) : C.ink);
+    ctx.fillText(n.label, n.x, ly);
+    /* ★ 衛星掛點鏈：重點字一顆一點，往標籤的另一側串下去 */
+    n._kwHit = null;                                        // 右鍵命中框（世界座標），每禎重建
+    if(hlOn && n.kw && !dim){
+      const kwHit = [];
+      const down = true;                                    // 鏈一律往下（往上會戳到上一列／上一條副線）
+      const sameSide = !n.labelUp;                          // 標籤也在下方時多留空間
+      const sgn = down ? 1 : -1;
+      const fs2 = fsBase(9.5);
+      const step = Math.max(20, fs2*1.8);
+      let px = n.x;
+      let py = n.y + sgn*(nodeR(n) + (sameSide ? fs2*2+12 : 15));
+      let prevX = n.x, prevY = n.y + sgn*nodeR(n);
+      if(n.kwEdited){                                       // ✎＝這串衛星是手改過的
+        ctx.font = FONT({s:fs2}); ctx.textAlign="left"; ctx.textBaseline="middle";
+        ctx.fillStyle = C.muted; ctx.globalAlpha = 0.75;
+        ctx.fillText("✎", n.x + 6, n.y + sgn*(nodeR(n) + 7));
+      }
+      n.kw.forEach(it=>{
+        ctx.beginPath(); ctx.moveTo(prevX,prevY); ctx.lineTo(px,py-sgn*4);
+        ctx.strokeStyle=C.edge; ctx.lineWidth=1/scale; ctx.globalAlpha=0.6; ctx.stroke();
+        const col = it.k==="hl" ? C.red : it.k==="hb" ? C.blue : C.muted;
+        ctx.beginPath(); ctx.arc(px,py,4,0,2*Math.PI);
+        ctx.fillStyle=col; ctx.globalAlpha=1; ctx.fill();
+        ctx.font = FONT({s:fs2});
+        const txt = it.d || it.w;
+        const w2 = ctx.measureText(txt).width;
+        ctx.globalAlpha=0.85; ctx.fillStyle=C.canvas;
+        ctx.fillRect(px+7, py-fs2/2-1, w2+4, fs2+2);
+        ctx.globalAlpha=0.95; ctx.textAlign="left"; ctx.textBaseline="middle";
+        ctx.fillStyle = it.k==="loc" ? C.ink : col;
+        ctx.fillText(txt, px+9, py);
+        kwHit.push({x0:px-7, y0:py-fs2/2-4, x1:px+11+w2, y1:py+fs2/2+4});
+        prevX=px; prevY=py+sgn*4;
+        py += sgn*step;
+      });
+      n._kwHit = kwHit;
+      ctx.textAlign="center";
+    }
+  });
+  ctx.globalAlpha=1;
+}
+
+function loop(){ draw(); requestAnimationFrame(loop); }
+loop();
+
+/* 互動 */
+function toWorld(px,py){ return [(px-tx)/scale, (py-ty)/scale]; }
+function pick(px,py){
+  const [x,y]=toWorld(px,py);
+  let best=null, bd=1e9;
+  nodes.forEach(n=>{
+    if(!visible(n)) return;
+    const d=Math.hypot(n.x-x,n.y-y);
+    if(d<nodeR(n)+7/scale && d<bd){best=n;bd=d;}
+  });
+  return best;
+}
+cv.addEventListener("pointerdown",e=>{
+  if(e.button!==0) return;            // 右鍵留給衛星編輯選單，不要拖到節點、也不要開詳情面板
+  autoFit=false;
+  cv.setPointerCapture(e.pointerId);
+  const n = pick(e.clientX,e.clientY);
+  lastX=e.clientX; lastY=e.clientY;
+  if(n){ dragN=n; }
+  else { panning=true; cv.classList.add("dragging"); }
+});
+cv.addEventListener("pointermove",e=>{
+  if(dragN){
+    const [x,y]=toWorld(e.clientX,e.clientY);
+    dragN.x=x; dragN.y=y;
+    tip.style.display="none";
+    return;
+  }
+  if(panning){
+    tx+=e.clientX-lastX; ty+=e.clientY-lastY;
+    lastX=e.clientX; lastY=e.clientY;
+    return;
+  }
+  const n=pick(e.clientX,e.clientY);
+  if(n!==hoverN){ hoverN=n; cv.style.cursor = n?"pointer":"grab"; }
+  if(n){
+    tip.style.display="block";
+    tip.innerHTML = `<strong>${n.label}</strong><div class="t-sub">${n.sub||""}</div>`;
+    const tw = tip.offsetWidth;
+    tip.style.left = Math.min(e.clientX+14, W-tw-10)+"px";
+    tip.style.top = (e.clientY+16)+"px";
+  } else tip.style.display="none";
+});
+cv.addEventListener("pointerup",e=>{
+  if(e.button!==0) return;
+  if(dragN){
+    const moved = Math.hypot(e.clientX-lastX,e.clientY-lastY);
+    if(moved<4){ select(dragN); }
+    dragN=null;
+    return;
+  }
+  if(panning){
+    panning=false; cv.classList.remove("dragging");
+    const moved = Math.hypot(e.clientX-lastX,e.clientY-lastY);
+    if(moved<4 && !pick(e.clientX,e.clientY)) select(null);
+  }
+});
+cv.addEventListener("wheel",e=>{
+  e.preventDefault();
+  autoFit=false;
+  const k = e.deltaY<0 ? 1.12 : 1/1.12;
+  const ns = Math.min(3.5, Math.max(0.15, scale*k));
+  tx = e.clientX - (e.clientX-tx)*ns/scale;
+  ty = e.clientY - (e.clientY-ty)*ns/scale;
+  scale = ns;
+},{passive:false});
+
+/* 詳情面板 */
+const panel=document.getElementById("panel");
+function focusNode(o){
+  select(o);
+  autoFit=false;
+  tx = W/2 - o.x*scale;
+  ty = H/2 - o.y*scale;
+}
+/* 說明欄一律條列式：優先用 ①②③… 分條（括號內的編號如「（形勢圖①）」不拆）；
+   沒有編號時，改用句號切成一句一條，仍只有一條時才維持整段。 */
+/* 沒有①②③的說明：依句號（其次分號）切條，套用與編號清單相同的版面 */
+function fmtSent(t){
+  const split = re => t.split(re).map(x=>x.trim()).filter(Boolean);
+  let parts = split(/(?<=。)(?![」』）)])/);
+  if(parts.length < 2) parts = split(/(?<=；)(?![」』）)])/);
+  if(parts.length < 2) return t;
+  return `<ol class="nt">` + parts.map((p,i)=>
+    `<li><span class="nt-n">${i+1}.</span><span>${p}</span></li>`).join("") + `</ol>`;
+}
+function fmtNote(t){
+  if(!t) return "";
+  const marks = t.match(/(?<![（(圖])[①-⑳]/g);
+  if(!marks || marks.length < 2) return fmtSent(t);
+  const parts = t.split(/(?<![（(圖])(?=[①-⑳])/);
+  const lead = !/^[①-⑳]/.test(parts[0]) ? parts.shift() : "";
+  let h = "";
+  if(lead && lead.trim()) h += `<div class="nt-lead">${lead.trim()}</div>`;
+  h += `<ol class="nt">` + parts.map(p=>{
+    const m = p.match(/^([①-⑳])\s*([\s\S]*)$/);
+    return `<li><span class="nt-n">${m[1]}</span><span>${m[2].trim()}</span></li>`;
+  }).join("") + `</ol>`;
+  return h;
+}
+function select(n){
+  selN=n;
+  if(!n){ panel.classList.remove("show"); return; }
+  document.getElementById("pKind").textContent = n.cat + (n.ch ? "・" + CHAPTERS[n.ch] : "・跨章共用");
+  document.getElementById("pTitle").textContent = n.label;
+  /* 基本資料表 */
+  let bs = `<table><tbody>`;
+  bs += `<tr><th>類型</th><td>${n.cat}（${KIND[n.kind].name}）</td></tr>`;
+  bs += `<tr><th>章節</th><td>${n.ch ? CHAPTERS[n.ch] : "跨章共用"}</td></tr>`;
+  if(n.era) bs += `<tr><th>分期</th><td><span class="p-status" style="background:${css(ERA_COLOR[n.era])};margin:0">${ERA_LABEL[n.era]}</span></td></tr>`;
+  if(n.sub) bs += `<tr><th>副標</th><td>${n.sub}</td></tr>`;
+  if(n.note) bs += `<tr><th>說明</th><td>${fmtNote(n.note)}</td></tr>`;
+  bs += `</tbody></table>`;
+  document.getElementById("pBasic").innerHTML = bs;
+  const tb = document.getElementById("pTbl");
+  if(n.tbl && TABLES[n.tbl]){
+    const T = TABLES[n.tbl];
+    tb.innerHTML = `<div class="c-title"><span>▦ ${T.title}</span><span class="c-hint">點表格可放大</span></div>${T.html}`;
+    tb.style.display = "block";
+    tb.querySelector("table").onclick = ()=> openTable(T);
+  } else { tb.style.display = "none"; tb.innerHTML = ""; }
+  /* 關聯表：直接關聯＋同脈絡（不限層數），全部列出 */
+  const rels = document.getElementById("pRels");
+  const direct = links.filter(l=>(l.s===n||l.t===n) && chVis(l.s) && chVis(l.t));
+  const directIds = new Set(direct.map(l=>(l.s===n?l.t:l.s).id));
+  const fs = relatedSet(n);
+  const indirect = [...fs].map(id=>byId[id])
+    .filter(o=>o!==n && !directIds.has(o.id) && chVis(o))
+    .sort((a,b)=>a.row-b.row || a.x-b.x);
+  const nd = o=>`<span class="nd"><span class="r-dot" style="background:${nodeColor(o)}"></span><span>${o.label}</span></span>`;
+  let h = `<table><tbody><tr><th>節點</th><th>層</th><th>關係</th></tr>`;
+  direct.slice().sort((a,b)=>{
+      const oa=a.s===n?a.t:a.s, ob=b.s===n?b.t:b.s;
+      return oa.row-ob.row || oa.x-ob.x;
+    }).forEach(l=>{
+      const o = l.s===n ? l.t : l.s;
+      h += `<tr class="lnk" data-id="${o.id}"><td>${nd(o)}</td><td>${ROW_NAME[o.row]}</td><td>${l.dash?"╌ ":""}${l.lab}</td></tr>`;
+    });
+  if(indirect.length){
+    h += `<tr><td colspan="3" class="grp2">同脈絡（間接關聯）共 ${indirect.length} 項</td></tr>`;
+    indirect.forEach(o=>{
+      h += `<tr class="lnk" data-id="${o.id}"><td>${nd(o)}</td><td>${ROW_NAME[o.row]}</td><td>同脈絡</td></tr>`;
+    });
+  }
+  h += `</tbody></table>`;
+  rels.innerHTML = h;
+  rels.querySelectorAll("tr.lnk").forEach(tr=>{
+    tr.onclick=()=>focusNode(byId[tr.dataset.id]);
+  });
+  panel.classList.add("show");
+}
+document.getElementById("pClose").onclick=()=>select(null);
+document.getElementById("fitBtn").onclick=()=>{ autoFit=true; };
+/* 放大檢視（通用）：表格上方掛「政權籤」，點了點亮該政權的列、其餘變淡（可複選；「全部」還原） */
+const OVL_REGIMES = [
+  ["荷蘭",["荷"]], ["西班牙",["西班牙"]], ["鄭氏",["鄭"]],
+  ["清",["清"]], ["日本",["日本","日治"]], ["民國",["民國","中華民國","戰後"]]
+];
+/* 族群籤：漢人／原住民（含各族別名） */
+const OVL_GROUPS = [
+  ["原住民",["原住民","平埔","高山各族","高砂","西拉雅","賽德克","凱達格蘭","噶瑪蘭","大肚王","馬賽","族群"]],
+  ["漢人",["漢人","官紳民","閩","粵","客家"]]
+];
+function openTable(T){
+  const box = document.getElementById("ovlBox");
+  /* 本表專屬籤＝①表內實際出現的政權 ＋ ②本表自己的紅/藍重點字（依出現次數取前 12） */
+  const regs = OVL_REGIMES.filter(([n2,ks])=>ks.some(k=>T.html.includes(k)));
+  const grps = OVL_GROUPS.filter(([n2,ks])=>ks.some(k=>T.html.includes(k)));
+  const dv = document.createElement("div"); dv.innerHTML = T.html;
+  const JUNK1 = new Set(["多","少","例","人","年","大","小","前","後","中","的","有","無"]);
+  const freq = new Map();
+  dv.querySelectorAll(".hl,.hb").forEach(s=>{
+    s.textContent.split(/[\s（）()、，,．。・／/→➡↔；;：:「」『』★＝=＋+—–\-～~｜|]+/).forEach(w=>{
+      if(!w || w.length>7 || /^\d+(年|世紀)?$/.test(w)) return;
+      if(w.length===1 && JUNK1.has(w)) return;
+      freq.set(w,(freq.get(w)||0)+1);
+    });
+  });
+  const kws = [...freq.entries()]
+    .filter(([w])=>!regs.some(([n2,ks])=>n2===w || ks.includes(w)))    // 政權字不重複出籤
+    .filter(([w])=>!grps.some(([n2,ks])=>n2===w || ks.includes(w)))    // 族群字不重複出籤
+    .filter(([w])=> w.length>1 || "糖茶郊圳米".includes(w))            // 單字籤只留有意義的（糖/茶/郊/圳/米）
+    .sort((a,b)=>b[1]-a[1] || a[0].length-b[0].length)
+    .slice(0,12).map(([w])=>w);
+  const chipDefs = [
+    ...regs.map(([n2,ks])=>({l:n2, ks, cls:" o-reg"})),
+    ...grps.map(([n2,ks])=>({l:n2, ks, cls:" o-grp"})),
+    ...kws.map(w=>({l:w, ks:[w], cls:" o-kw"}))
+  ];
+  const chips = chipDefs.length
+    ? `<div class="o-chips">${chipDefs.map(c=>`<span class="o-chip${c.cls}" data-r="${c.l}">${c.l}</span>`).join("")}<span class="o-chip o-clear" data-r="">全部</span></div>`
+    : "";
+  box.innerHTML = `<h3>▦ ${T.title}</h3>${chips}${T.html}<div class="o-hint">${chipDefs.length?"點籤＝點亮相關的列與格（可複選）｜":""}點表格外任意處關閉</div>`;
+  const tb2 = box.querySelector("table");
+  const keysOf = l => (chipDefs.find(c=>c.l===l)||{ks:[l]}).ks;
+  const active = new Set();
+  const apply = ()=>{
+    const keys = [...active].flatMap(keysOf);
+    [...tb2.rows].forEach((row,i)=>{
+      [...row.cells].forEach(cell=>cell.classList.remove("k-hit"));
+      if(i===0 || row.cells.length===1 || row.querySelector(".grp")){ row.style.opacity=""; return; }  // 表頭/區段列/註記列恆亮
+      if(!keys.length){ row.style.opacity=""; return; }
+      const hit = keys.some(k=>row.textContent.includes(k));
+      row.style.opacity = hit ? "" : "0.22";
+      if(hit) [...row.cells].forEach(cell=>{ if(keys.some(k=>cell.textContent.includes(k))) cell.classList.add("k-hit"); });
+    });
+    box.querySelectorAll(".o-chip").forEach(c=>c.classList.toggle("on", active.has(c.dataset.r)));
+  };
+  box.querySelectorAll(".o-chip").forEach(c=>{
+    c.onclick = (e)=>{
+      e.stopPropagation();
+      const r = c.dataset.r;
+      if(!r) active.clear();
+      else active.has(r) ? active.delete(r) : active.add(r);
+      apply();
+    };
+  });
+  document.getElementById("ovl").classList.add("show");
+}
+/* 放大檢視：點任意處或 Esc 關閉 */
+const ovl=document.getElementById("ovl");
+ovl.onclick=()=>ovl.classList.remove("show");
+addEventListener("keydown",e=>{ if(e.key==="Escape") ovl.classList.remove("show"); });
+
+/* 章節開關：依課本分冊分組（第一冊＝①②③、第二冊＝④⑤）
+   冊籤＝一鍵只看該冊，已經只看該冊時再按一次＝全部展開；章籤＝單章開關 */
+const VOLS = [
+  {name:"第三冊", range:"商周～晚清",     chs:[5,6,7]},
+  {name:"第四冊", range:"民國～當代東亞", chs:[8,9,10]}
+];
+const chBox=document.getElementById("chChips");
+const chBtn={}, volBtn={};
+function syncChips(){
+  Object.entries(chBtn).forEach(([c,b])=>b.classList.toggle("off",!chOn[c]));
+  VOLS.forEach(v=>{
+    const allMine  = v.chs.every(c=>chOn[c]);
+    const noOthers = Object.keys(CHAPTERS).every(c=> v.chs.includes(+c) || !chOn[c]);
+    volBtn[v.name].classList.toggle("solo", allMine && noOthers);
+  });
+}
+function applyCh(){
+  if(selN && !chVis(selN)) select(null);
+  syncChips();
+  layout();
+  autoFit=true;
+}
+function mkChChip(c){
+  const b=document.createElement("div");
+  b.className="chip ch";
+  b.textContent = ("①②③④⑤⑥⑦⑧⑨⑩"[c-1] || c) + " " + CHAPTERS[c];
+  b.onclick=()=>{ chOn[c]=!chOn[c]; applyCh(); };
+  chBtn[c]=b;
+  chBox.appendChild(b);
+}
+VOLS.forEach((v,vi)=>{
+  if(vi) chBox.appendChild(Object.assign(document.createElement("div"),{className:"vsep"}));
+  const vb=document.createElement("div");
+  vb.className="chip vol";
+  vb.innerHTML = v.name + "<small>" + v.range + "</small>";
+  vb.title = "只看 " + v.name + "（再按一次全部展開）";
+  vb.onclick=()=>{
+    const solo = vb.classList.contains("solo");
+    Object.keys(CHAPTERS).forEach(c=>{ chOn[c] = solo ? true : v.chs.includes(+c); });
+    applyCh();
+  };
+  volBtn[v.name]=vb;
+  chBox.appendChild(vb);
+  v.chs.filter(c=>CHAPTERS[c]).forEach(mkChChip);
+});
+/* 沒被分到冊的章（日後加章時）照樣出籤，不會憑空消失 */
+Object.keys(CHAPTERS).filter(c=>!VOLS.some(v=>v.chs.includes(+c))).forEach(mkChChip);
+syncChips();
+
+/* 種類篩選 chips */
+const chipBox=document.getElementById("chips");
+Object.entries(CAT).forEach(([k,v])=>{
+  const b=document.createElement("div");
+  b.className="chip";
+  b.innerHTML=`<span class="dot" style="background:var(${v.cssVar})"></span>${k}`;
+  b.onclick=()=>{
+    hidden[k]=!hidden[k];
+    b.classList.toggle("off",hidden[k]);
+    if(selN && hidden[selN.cat]) select(null);
+    layout();
+    autoFit=true;
+  };
+  chipBox.appendChild(b);
+});
+
+/* ★ 重點字開關：點亮比較表中紅/藍重點字對應的節點 */
+{
+  const b=document.createElement("div");
+  b.className="chip";
+  b.id="hlChip";
+  b.innerHTML=`<span class="dot" style="background:var(--red)"></span><span class="dot" style="background:var(--blue);margin-left:-10px"></span>★ 重點字`;
+  b.title="點亮：比較表中標紅／藍色的重點字所對應的節點";
+  b.onclick=()=>{
+    hlOn=!hlOn;
+    b.classList.toggle("ch",hlOn);
+    b.style.borderColor = hlOn ? "var(--red)" : "";
+    layout();        // 列距／副線距隨模式切換重新排版
+    autoFit=true;
+  };
+  chipBox.appendChild(b);
+}
+
+/* ===== 搜尋視窗 =====（normS 定義於 ★重點字 區塊，兩處共用） */
+const sIn = document.getElementById("searchInput");
+const sRes = document.getElementById("searchResults");
+let srList = [], srIdx = -1, srTerms = [];
+function snippet(n,q){
+  const t = n.note||"";
+  const i = normS(t).indexOf(q);
+  if(i<0) return n.sub||"";
+  const a = Math.max(0, i-8);
+  return (a>0?"…":"") + t.slice(a, i+q.length+14) + "…";
+}
+function renderResults(q){
+  if(!srList.length){
+    sRes.innerHTML = `<div class="sr-empty">找不到「${q}」（可搜標題・副標・說明全文；多關鍵字用空格或 - 分隔，臺＝台互通）</div>`;
+    sRes.classList.add("show");
+    return;
+  }
+  /* 片段優先顯示「命中在說明文」的那個關鍵字 */
+  const snipQ = n => srTerms.find(t=>normS(n.note).includes(t)) || srTerms[0] || q;
+  sRes.innerHTML = srList.slice(0,50).map((n,i)=>
+    `<div class="sr${i===srIdx?" act":""}" data-i="${i}">
+       <span class="r-dot" style="background:${nodeColor(n)}"></span>
+       <span>${n.label}</span><span class="sr-sub">${snippet(n,snipQ(n))}</span>
+     </div>`).join("")
+    + (srList.length>50 ? `<div class="sr-empty">…共 ${srList.length} 筆，僅列前 50，請再縮小關鍵字</div>` : "");
+  sRes.classList.add("show");
+  sRes.querySelectorAll(".sr").forEach(d=>{
+    d.onclick = ()=>{ srIdx = +d.dataset.i; focusNode(srList[srIdx]); };
+  });
+}
+function doSearch(){
+  const raw = sIn.value.trim();
+  srIdx = -1;
+  /* 多關鍵字：空格・-・－・／・、・，分隔 ＝ AND（每個關鍵字都要在標題/副標/說明其中之一出現） */
+  srTerms = normS(raw).split(/[\s\-－–—・/／,，、]+/).filter(Boolean);
+  if(!srTerms.length){ searchSet=null; srList=[]; sRes.classList.remove("show"); sRes.innerHTML=""; return; }
+  srList = nodes.filter(n=>{
+    if(!chVis(n)) return false;
+    const hay = normS(n.label)+"｜"+normS(n.sub)+"｜"+normS(n.note);
+    return srTerms.every(t=>hay.includes(t));
+  });
+  searchSet = new Set(srList.map(n=>n.id));
+  renderResults(raw);
+}
+sIn.addEventListener("input", doSearch);
+sIn.addEventListener("keydown", e=>{
+  if(e.key==="Enter" && srList.length){
+    srIdx = (srIdx+1) % Math.min(srList.length, 50);
+    renderResults(sIn.value.trim());
+    focusNode(srList[srIdx]);
+  } else if(e.key==="Escape"){
+    sIn.value=""; doSearch(); sIn.blur();
+  }
+});
+sIn.addEventListener("focus", ()=>{ if(srList.length) sRes.classList.add("show"); });
+document.addEventListener("pointerdown", e=>{
+  if(!sRes.contains(e.target) && e.target!==sIn) sRes.classList.remove("show");
+});
+
+/* ===== ▦ 比較表總覽選單（52 張表統一入口，跨章總表置頂） ===== */
+const TBL_GROUPS = [
+  ["跨單元總表（同類比較）", ["c2","c3","c4","c13"]],
+  ["⑤ 商周至隋唐",          ["c1"]],
+  ["⑥ 宋元明清",            ["c5","c6"]],
+  ["⑦ 晚清變局",            ["c7","c8","c9","c10"]],
+  ["⑧⑨ 民國與抗戰",         ["c11","c12"]]
+];
+const tblBtn = document.getElementById("tblBtn");
+const tblMenu = document.getElementById("tblMenu");
+tblMenu.innerHTML = TBL_GROUPS.map(([g,ids])=>
+  `<div class="tm-g">${g}</div>` +
+  ids.filter(id=>TABLES[id]).map(id=>`<div class="tm-i" data-t="${id}">▦ ${TABLES[id].title}</div>`).join("")
+).join("");
+tblBtn.onclick = ()=> tblMenu.classList.toggle("show");
+tblMenu.querySelectorAll(".tm-i").forEach(d=>{
+  d.onclick = ()=>{
+    const T = TABLES[d.dataset.t];
+    openTable(T);
+    tblMenu.classList.remove("show");
+  };
+});
+document.addEventListener("pointerdown", e=>{
+  if(!tblMenu.contains(e.target) && !tblBtn.contains(e.target)) tblMenu.classList.remove("show");
+});
+
+/* ===== ✎ 衛星掛點編輯：右鍵選單＋清單編輯器 =====
+   右鍵一顆衛星＝改那一顆；右鍵節點＝整串清單；右鍵空白＝匯出／匯入／全部還原。
+   所有變更走覆蓋層（KWEDIT），自動存 localStorage，原始資料區永遠乾淨。 */
+const kwMenu = document.getElementById("kwMenu");
+const kwOvl  = document.getElementById("kwOvl");
+const kwBox  = document.getElementById("kwBox");
+const K_COL  = [["hl","紅：核心重點","var(--red)"],["hb","藍：人名／年代／地區","var(--blue)"],["loc","灰：地點／補充","var(--muted)"]];
+const kwEsc  = t => String(t==null?"":t).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* 命中測試：畫面座標 → 哪一顆衛星（命中框由 draw() 每禎寫入 n._kwHit） */
+function pickKw(px,py){
+  const [x,y] = toWorld(px,py);
+  for(const n of nodes){
+    if(!n._kwHit || !visible(n)) continue;    /* 章節關掉／隱藏後殘留的命中框不算數 */
+    for(let i=0;i<n._kwHit.length;i++){
+      const h = n._kwHit[i];
+      if(x>=h.x0 && x<=h.x1 && y>=h.y0 && y<=h.y1) return {n, i};
+    }
+  }
+  return null;
+}
+const closeKwMenu = ()=> kwMenu.classList.remove("show");
+function showKwMenu(x, y, html, bind){
+  kwMenu.innerHTML = html;
+  kwMenu.style.left = "0px"; kwMenu.style.top = "0px";
+  kwMenu.classList.add("show");
+  const r = kwMenu.getBoundingClientRect();
+  kwMenu.style.left = Math.max(6, Math.min(x, innerWidth  - r.width  - 8)) + "px";
+  kwMenu.style.top  = Math.max(6, Math.min(y, innerHeight - r.height - 8)) + "px";
+  bind(kwMenu);
+}
+/* 衛星只在 ★重點字 模式看得到，改完要看得見結果就自動開起來 */
+function ensureHl(){ if(!hlOn) document.getElementById("hlChip").click(); }
+
+/* --- 右鍵：單顆衛星 --- */
+function menuForSat(e, n, i){
+  const it = n.kw[i];
+  showKwMenu(e.clientX, e.clientY,
+    '<div class="km-t">● ' + kwEsc(it.d || it.w) + '</div>' +
+    '<div class="km-c">' + K_COL.map(([k,t,c])=>
+      '<i data-k="' + k + '" title="' + t + '" class="' + ((it.k||"hl")===k?"on":"") + '" style="background:' + c + '"></i>').join("") + '</div>' +
+    '<div class="km-i" data-a="txt">✎ 改文字…</div>' +
+    '<div class="km-i" data-a="up">↑ 往上移</div>' +
+    '<div class="km-i" data-a="dn">↓ 往下移</div>' +
+    '<div class="km-i" data-a="ins">＋ 在下方插入一顆</div>' +
+    '<div class="km-s"></div>' +
+    '<div class="km-i" data-a="del">🗑 刪除這顆</div>' +
+    '<div class="km-i" data-a="edit">▤ 編輯整串…</div>' +
+    (n.kwEdited ? '<div class="km-i" data-a="reset">↩ 這個節點還原自動</div>' : ''),
+  m=>{
+    m.querySelectorAll("i[data-k]").forEach(el=> el.onclick = ()=>{
+      const L = kwListOf(n); L[i].k = el.dataset.k; setKw(n, L); closeKwMenu();
+    });
+    m.querySelectorAll(".km-i").forEach(el=> el.onclick = ()=>{
+      const a = el.dataset.a, L = kwListOf(n);
+      if(a==="txt"){ const v = prompt("衛星文字（可用「－」做配對，例：臺北－瑠公圳）：", L[i].d); if(v==null || !v.trim()) return; L[i].d = v; setKw(n,L); }
+      else if(a==="up"  && i>0)          { const t=L[i-1]; L[i-1]=L[i]; L[i]=t; setKw(n,L); }
+      else if(a==="dn"  && i<L.length-1) { const t=L[i+1]; L[i+1]=L[i]; L[i]=t; setKw(n,L); }
+      else if(a==="ins"){ const v = prompt("新增衛星文字："); if(v && v.trim()){ L.splice(i+1,0,{d:v, k:"hl"}); setKw(n,L); } }
+      else if(a==="del"){ L.splice(i,1); setKw(n,L); }
+      else if(a==="edit"){ closeKwMenu(); openKwEditor(n); return; }
+      else if(a==="reset"){ setKw(n,null); }
+      closeKwMenu();
+    });
+  });
+}
+/* --- 右鍵：節點 --- */
+function menuForNode(e, n){
+  const cnt = (n.kw||[]).length;
+  showKwMenu(e.clientX, e.clientY,
+    '<div class="km-t">' + kwEsc(n.label) + '　衛星 ' + cnt + ' 顆' + (n.kwEdited ? '　✎已編輯' : '') + '</div>' +
+    '<div class="km-i" data-a="edit">▤ 編輯衛星清單…</div>' +
+    '<div class="km-i" data-a="add">＋ 新增一顆衛星</div>' +
+    '<div class="km-s"></div>' +
+    '<div class="km-i" data-a="none">🚫 這個節點不掛衛星</div>' +
+    (n.kwEdited ? '<div class="km-i" data-a="reset">↩ 還原自動計算</div>' : ''),
+  m=>{
+    m.querySelectorAll(".km-i").forEach(el=> el.onclick = ()=>{
+      const a = el.dataset.a;
+      if(a==="edit"){ closeKwMenu(); openKwEditor(n); return; }
+      if(a==="add"){ const v = prompt("新增衛星文字："); if(v && v.trim()){ const L = kwListOf(n); L.push({d:v, k:"hl"}); setKw(n,L); ensureHl(); } }
+      else if(a==="none"){ setKw(n, []); }
+      else if(a==="reset"){ setKw(n, null); }
+      closeKwMenu();
+    });
+  });
+}
+/* --- 右鍵：空白處 --- */
+function menuForBlank(e){
+  const cnt = Object.keys(KWEDIT.kw).length;
+  showKwMenu(e.clientX, e.clientY,
+    '<div class="km-t">衛星編輯：已改 ' + cnt + ' 個節點</div>' +
+    '<div class="km-i" data-a="exp">💾 匯出變更（JSON）</div>' +
+    '<div class="km-i" data-a="imp">📥 匯入變更檔</div>' +
+    '<div class="km-s"></div>' +
+    '<div class="km-i" data-a="all">↩ 全部還原成自動</div>',
+  m=>{
+    m.querySelectorAll(".km-i").forEach(el=> el.onclick = ()=>{
+      const a = el.dataset.a;
+      if(a==="exp") exportKw();
+      else if(a==="imp") importKw();
+      else if(a==="all"){
+        if(!cnt) alert("目前沒有任何編輯。");
+        else if(confirm("清掉全部 " + cnt + " 個節點的衛星編輯，回到自動計算？")){ KWEDIT.kw = {}; applyKwEdits(); saveKwEdits(); }
+      }
+      closeKwMenu();
+    });
+  });
+}
+/* --- 清單編輯器：一次改整串（順序＝畫面由上往下） --- */
+let kwEditNode = null, kwDraft = [];
+function kwRenderRows(){
+  const rows = document.getElementById("kwRows");
+  rows.innerHTML = kwDraft.map((it,i)=>
+    '<div class="k-row" data-i="' + i + '">' +
+      '<span class="k-n">' + (i+1) + '</span>' +
+      '<select data-f="k">' + K_COL.map(([k,t])=>'<option value="' + k + '"' + (it.k===k?" selected":"") + '>' + t + '</option>').join("") + '</select>' +
+      '<input data-f="d" value="' + kwEsc(it.d) + '" placeholder="衛星文字">' +
+      '<button data-f="up" title="上移">↑</button>' +
+      '<button data-f="dn" title="下移">↓</button>' +
+      '<button data-f="rm" title="刪除">✕</button>' +
+    '</div>').join("") || '<div class="k-sub" style="margin:2px 0 12px">（目前沒有衛星，按下方「＋」新增）</div>';
+  rows.querySelectorAll(".k-row").forEach(row=>{
+    const i = +row.dataset.i;
+    row.querySelector('[data-f="d"]').oninput  = ev => kwDraft[i].d = ev.target.value;
+    row.querySelector('[data-f="k"]').onchange = ev => kwDraft[i].k = ev.target.value;
+    row.querySelector('[data-f="up"]').onclick = ()=>{ if(i>0){ const t=kwDraft[i-1]; kwDraft[i-1]=kwDraft[i]; kwDraft[i]=t; kwRenderRows(); } };
+    row.querySelector('[data-f="dn"]').onclick = ()=>{ if(i<kwDraft.length-1){ const t=kwDraft[i+1]; kwDraft[i+1]=kwDraft[i]; kwDraft[i]=t; kwRenderRows(); } };
+    row.querySelector('[data-f="rm"]').onclick = ()=>{ kwDraft.splice(i,1); kwRenderRows(); };
+  });
+}
+function openKwEditor(n){
+  kwEditNode = n;
+  kwDraft = kwListOf(n);
+  const auto = (n._kwAuto||[]).map(x=>x.d||x.w).join("、") || "（無）";
+  kwBox.innerHTML =
+    '<h3>✎ ' + kwEsc(n.label) + ' 的衛星掛點</h3>' +
+    '<div class="k-sub">往下展開的那一串小點，順序＝由上往下。' + (n.kwEdited ? '<b>此節點已手改。</b>' : '') +
+      '<br>自動值：' + kwEsc(auto) + '</div>' +
+    '<div id="kwRows"></div>' +
+    '<button class="k-add" id="kwAdd">＋ 新增一顆</button>' +
+    '<div class="k-btns">' +
+      '<button id="kwAuto">↩ 還原自動</button>' +
+      '<span class="k-sp"></span>' +
+      '<button id="kwCancel">取消</button>' +
+      '<button class="k-ok" id="kwSave">儲存</button>' +
+    '</div>' +
+    '<div class="k-tip">顏色＝紅（核心重點）／藍（人名・年代・地區）／灰（地點・補充）。' +
+      '文字用「－」可做成配對點，例：<b>臺北－瑠公圳</b>。<br>' +
+      '變更存在這台電腦的瀏覽器裡（換電腦／清瀏覽資料會消失），重要修改請在空白處右鍵「匯出變更」。</div>';
+  kwRenderRows();
+  document.getElementById("kwAdd").onclick = ()=>{
+    kwDraft.push({d:"", k:"hl"}); kwRenderRows();
+    const ins = kwBox.querySelectorAll('[data-f="d"]'); if(ins.length) ins[ins.length-1].focus();
+  };
+  document.getElementById("kwCancel").onclick = closeKwEditor;
+  document.getElementById("kwSave").onclick   = ()=>{ setKw(kwEditNode, kwDraft); closeKwEditor(); ensureHl(); };
+  document.getElementById("kwAuto").onclick   = ()=>{ setKw(kwEditNode, null);    closeKwEditor(); ensureHl(); };
+  kwOvl.classList.add("show");
+}
+function closeKwEditor(){ kwOvl.classList.remove("show"); kwEditNode = null; }
+
+/* --- 匯出／匯入 --- */
+function exportKw(){
+  const d = new Date(), p = x => String(x).padStart(2,"0");
+  const blob = new Blob([JSON.stringify(KWEDIT, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "衛星編輯_" + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + ".json";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+function importKw(){
+  const f = document.createElement("input");
+  f.type = "file"; f.accept = ".json,application/json";
+  f.onchange = ()=>{
+    const fl = f.files && f.files[0]; if(!fl) return;
+    const rd = new FileReader();
+    rd.onload = ()=>{
+      let o = null;
+      try{ o = JSON.parse(rd.result); }catch(err){}
+      if(!o || !o.kw || typeof o.kw !== "object"){ alert("檔案格式不符，需要 {ver, base, kw:{節點id:[{d,k}…]}}"); return; }
+      if(o.base && o.base !== KWEDIT.base) alert("提醒：這份變更檔標的是 " + o.base + "，目前檔案是 " + KWEDIT.base + "；節點 id 沒變仍可套用。");
+      KWEDIT = {ver:o.ver||1, base:KWEDIT.base, kw:o.kw};
+      applyKwEdits(); saveKwEdits(); ensureHl();
+      alert("已匯入 " + Object.keys(KWEDIT.kw).length + " 個節點的衛星編輯。");
+    };
+    rd.readAsText(fl, "utf-8");
+  };
+  f.click();
+}
+
+/* --- 事件綁定 --- */
+cv.addEventListener("contextmenu", e=>{
+  e.preventDefault();
+  const hit = hlOn ? pickKw(e.clientX, e.clientY) : null;
+  if(hit) return menuForSat(e, hit.n, hit.i);
+  const n = pick(e.clientX, e.clientY);
+  if(n) return menuForNode(e, n);
+  menuForBlank(e);
+});
+document.addEventListener("pointerdown", e=>{ if(!kwMenu.contains(e.target)) closeKwMenu(); });
+kwOvl.addEventListener("pointerdown", e=>{ if(e.target === kwOvl) closeKwEditor(); });
+addEventListener("keydown", e=>{
+  if(e.key === "Escape"){ closeKwMenu(); if(kwOvl.classList.contains("show")) closeKwEditor(); }
+  if(e.key === "Enter" && kwOvl.classList.contains("show")){ const b = document.getElementById("kwSave"); if(b) b.click(); }
+});
+</script>
+</body>
+</html>

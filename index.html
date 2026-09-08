@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>臺灣史複習工具｜關係圖・心智圖・行政區劃地圖</title>
+<title>歷史複習工具｜臺灣史・中國與東亞史</title>
 <style>
 :root{
   --canvas:#ffffff; --card:#ffffff; --panel:#f5f5f7;
@@ -21,77 +21,74 @@
 body{margin:0; background:var(--canvas); color:var(--ink);
   font:16px/1.7 system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
   -webkit-font-smoothing:antialiased}
-.wrap{max-width:760px; margin:0 auto; padding:48px 22px 64px}
+.wrap{max-width:780px; margin:0 auto; padding:44px 22px 64px}
 h1{font-size:26px; margin:0 0 6px; letter-spacing:-.3px}
-.sub{color:var(--muted); font-size:14px; margin:0 0 34px}
+.sub{color:var(--muted); font-size:14px; margin:0 0 30px}
+h2.grp{font-size:14px; font-weight:700; letter-spacing:.5px; margin:34px 0 6px;
+  padding-top:20px; border-top:1px solid var(--hairline)}
+h2.grp:first-of-type{border-top:0; padding-top:0; margin-top:0}
+h2.grp span{font-weight:400; color:var(--muted); font-size:12.5px; margin-left:9px}
 a.card{display:block; text-decoration:none; color:inherit;
   background:var(--card); border:1px solid var(--hairline); border-radius:16px;
-  padding:18px 20px; margin-bottom:14px; transition:transform .12s, border-color .12s}
+  padding:17px 19px; margin-bottom:12px; transition:transform .12s, border-color .12s}
 a.card:hover{transform:translateY(-2px); border-color:var(--muted)}
-a.card h2{margin:0 0 5px; font-size:18px; display:flex; align-items:center; gap:9px}
+a.card h3{margin:0 0 5px; font-size:17px; display:flex; align-items:center; gap:9px; flex-wrap:wrap}
 a.card p{margin:0; font-size:13.5px; color:var(--muted); line-height:1.65}
 .tag{font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px;
   border:1px solid currentColor; letter-spacing:.3px}
-.t-main{color:var(--red)} .t-map{color:var(--green)} .t-old{color:var(--muted)}
-.vols{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 22px}
-@media (max-width:560px){ .vols{grid-template-columns:1fr} }
-.vol{background:var(--panel); border:1px solid var(--hairline); border-radius:13px; padding:13px 15px}
-.vol b{font-size:15px; letter-spacing:.2px}
-.vol span{font-size:12px; color:var(--muted); margin-left:8px}
-.vol em{display:block; font-style:normal; font-size:12.5px; color:var(--muted); margin-top:6px; line-height:1.6}
-h3{font-size:13px; color:var(--muted); font-weight:600; letter-spacing:.6px;
-  margin:34px 0 12px; padding-top:22px; border-top:1px solid var(--hairline)}
+.t-main{color:var(--red)} .t-map{color:var(--green)} .t-old{color:var(--muted)} .t-new{color:var(--blue)}
 ul.docs{list-style:none; padding:0; margin:0}
-ul.docs li{margin-bottom:9px; font-size:14px}
+ul.docs li{margin-bottom:8px; font-size:14px}
 ul.docs a{color:var(--blue)}
-footer{margin-top:40px; font-size:12px; color:var(--muted); line-height:1.8}
+footer{margin-top:38px; padding-top:20px; border-top:1px solid var(--hairline);
+  font-size:12px; color:var(--muted); line-height:1.8}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<h1>臺灣史複習工具</h1>
-<p class="sub">依課本重點整理，個人學習用</p>
+<h1>歷史複習工具</h1>
+<p class="sub">臺灣史（第一・二冊）與中國與東亞史（第三・四冊）｜依課本與重點統整整理，個人學習用</p>
 
-<div class="vols">
-  <div class="vol">
-    <b>第一冊</b><span>史前～清帝國</span>
-    <em>① 史前與原住民　② 大航海時期　③ 清帝國時期</em>
-  </div>
-  <div class="vol">
-    <b>第二冊</b><span>日治～中華民國</span>
-    <em>④ 日治時期　⑤ 中華民國時期</em>
-  </div>
-</div>
+<h2 class="grp">臺灣史<span>第一冊 史前～清帝國　│　第二冊 日治～中華民國</span></h2>
 
 <a class="card" href="graph.html">
-  <h2>記憶關係圖 <span class="tag t-main">主要</span></h2>
-  <p>兩冊五章全。標頭的<b>冊籤</b>一按就只看該冊，再按一次全部展開；章籤仍可單章開關。
-     列＝政權／年號／年代／事件／人物／地點／重點／主題，箭頭＝因果關係，內建 53 張比較表。
-     開 ★重點字 可看每顆節點往下展開的衛星重點；<b>右鍵可以自己改衛星</b>。</p>
+  <h3>臺灣史記憶關係圖 <span class="tag t-main">主要</span></h3>
+  <p>五章全。標頭的<b>冊籤</b>一按就只看該冊。列＝政權／年號／年代／事件／人物／地點／重點／主題，
+     箭頭＝因果關係，內建 53 張比較表。開 ★重點字 看衛星重點；<b>右鍵可以自己改衛星</b>。</p>
 </a>
 
 <a class="card" href="admin-map.html">
-  <h2>行政區劃演變地圖 <span class="tag t-map">互動</span></h2>
+  <h3>行政區劃演變地圖 <span class="tag t-map">互動</span></h3>
   <p>康熙一府三縣 → 雍正 → 乾隆 → 嘉慶 → 光緒建省 → 日治五州三廳 → 戰後六都十六縣市，
      八期彩色分區切換，每期附調整原因。</p>
 </a>
 
 <a class="card" href="mindmap.html">
-  <h2>心智圖（橫式） <span class="tag t-old">舊版</span></h2>
-  <p>直欄＝年代、橫列＝事件／人物／地點／重點／主題，時期色帶橫貫。
+  <h3>臺灣史心智圖（橫式） <span class="tag t-old">舊版</span></h3>
+  <p>直欄＝年代、橫列＝事件／人物／地點／重點／主題。
      ⚠ 這份還停在第⑤章加入之前的資料，內容比關係圖少，待重建。</p>
 </a>
 
-<h3>文字版資料</h3>
+<h2 class="grp">中國與東亞史<span>第三冊 商周～晚清　│　第四冊 民國～當代東亞</span></h2>
+
+<a class="card" href="cn-graph.html">
+  <h3>中國與東亞史記憶關係圖 <span class="tag t-new">新</span></h3>
+  <p>單元 5～10 全，229 節點／276 關聯／19 張比較表，年代從前 1600 商朝到 1997 香港回歸。
+     朝代帶兩層（朝代＋細分），冊籤切換第三／第四冊。功能與臺灣史那張相同。</p>
+</a>
+
+<h2 class="grp">文字版資料</h2>
 <ul class="docs">
-  <li><a href="data.md">data.md</a>　—　關係圖全部節點的文字版，依年代排序（含手寫補充區）</li>
+  <li><a href="data.md">data.md</a>　—　臺灣史關係圖的文字版，依分冊→年代排序（含手寫補充區）</li>
+  <li><a href="cn-data-v3.md">cn-data-v3.md</a>　—　中國與東亞史<b>第三冊</b>（單元 5・6・7），三本參考書合併整理</li>
+  <li><a href="cn-data-v4.md">cn-data-v4.md</a>　—　中國與東亞史<b>第四冊</b>（單元 8・9・10）</li>
   <li><a href="edit-plan.md">edit-plan.md</a>　—　右鍵編輯功能規劃／已實作範圍</li>
 </ul>
 
 <footer>
-  三個檔都是單一 HTML，離線可用，不連任何外部服務。<br>
-  資料依課本與重點統整整理，個人學習用途。
+  所有 HTML 都是單一檔案，離線可用，不連任何外部服務。<br>
+  分冊依課本「本書單元內容」對照表：單元 1–4＝臺灣史（一、二冊）、單元 5–7＝第三冊、單元 8–10＝第四冊。
 </footer>
 
 </div>

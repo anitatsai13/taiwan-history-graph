@@ -11,6 +11,9 @@ $map = @(
   @{ from = "臺灣行政區劃演變地圖.html";             to = "admin-map.html" }
   @{ from = "臺灣史記憶關係圖_資料.md";              to = "data.md"        }
   @{ from = "臺灣史記憶關係圖_右鍵編輯功能規劃.md";  to = "edit-plan.md"   }
+  @{ from = "中國與東亞史記憶關係圖.html";           to = "cn-graph.html"  }
+  @{ from = "中國與東亞史_資料.md";                  to = "cn-data-v3.md"  }
+  @{ from = "中國與東亞史_資料_第四冊.md";           to = "cn-data-v4.md"  }
 )
 
 foreach ($m in $map) {
